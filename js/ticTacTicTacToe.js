@@ -200,18 +200,21 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
                 if (!gridWinner) {
                     // Check for a full grid winner; if the grid is full, the player with the most cells wins the grid
+                    console.log("in");
                     var numXCells = 0;
                     var numOCells = 0;
                     for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
                         for (var columnIndex = 0; columnIndex < 3; ++ columnIndex) {
                             if (grid[rowIndex][columnIndex] == "X") {
-                                numXCells = 0;
+                                numXCells += 1;
                             }
                             else if (grid[rowIndex][columnIndex] == "O") {
-                                numOCells = 0;
+                                numOCells += 1;
                             }
                         }
                     }
+                    console.log("numXCells: " + numXCells);
+                    console.log("numOCells: " + numOCells);
                     if (numXCells + numOCells == 9) {
                         if (numXCells > numOCells) {
                             gridWinner = "X";
@@ -220,6 +223,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                             gridWinner = "O";
                         }
                     }
+                    console.log("gridWinner: " + gridWinner);
                 }
             }
         }
