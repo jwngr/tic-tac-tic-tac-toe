@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html ng-app="tic-tac-tic-tac-toe-app">
+    <head>
+        <title>Tic-tac-tic-tac-toe | MMO tic-tac-toe, with a twist</title>
+
+        <!-- Firebase and Angular JS files --> 
+        <script src="https://cdn.firebase.com/js/client/1.0.11/firebase.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+        <script src="https://cdn.firebase.com/libs/angularfire/0.7.1/angularfire.min.js"></script>
+
+        <!-- Custom JS files -->
+        <script src="js/ticTacTicTacToe.js"></script>
+
+        <!-- Custom CSS files -->
+        <link rel="stylesheet" href="css/ticTacTicTacToe.css" />
+    </head>
+
+    <body ng-controller="TicTacTicTacToeController">
+        <div id="header">
+            <h1>Tic-tac-tic-tac-toe</h1>
+            <p>MMO tic-tac-toe, with a twist</p>
+        </div>
+        
+        <div id="opponentSelection">
+            <input type="button" value="Random Opponent" ng-click="joinVersusGame()" />
+            <input type="button" value="Play with the crowd" ng-click="joinMMOGame()" />
+        </div>
+
+        <div id="messages">
+            {{ currentGame.message }}
+        </div>
+
+        <div id="boardWrapper">
+            <div id="board">
+                <div class="row" ng-repeat="row in board">
+                    <div class="cell" ng-class="getValidForMoveClass($parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$index, $index)">
+                        {{ cell }}
+                    </div>
+                    <div class="gridWinner">
+                </div>
+            </div>
+        </div>
+
+        <div id="howToPlay">
+            <h2>How To PLay</h2>
+            <p>Do this</p>
+            <p>Then this</p>
+            <p>And then this</p>
+            <p>And finally this</p>
+        </div>
+    </body>
+</html>
