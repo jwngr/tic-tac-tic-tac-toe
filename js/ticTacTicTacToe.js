@@ -35,6 +35,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         $scope.lastVersusGame = dataSnapshot.val();
         $scope.lastVersusGame["name"] = dataSnapshot.name();
     });
+    // TODO: add Firebase off
 
     $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
         if ($scope.currentGame)
@@ -48,91 +49,207 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         }
     };
 
-        // TODO: add Firebase offs
-
     /* Joins an open versus game or creates a new one */
     $scope.joinVersusGame = function() {
-        if (!$scope.currentGame) {
-            if (!$scope.lastVersusGame || $scope.lastVersusGame.hasStarted) {
-                // Create new game since all games are full
-                var newGame = rootRef.child("/vsRandomOpponent/").push({
-                    hasStarted: false,
-                    winner: "",
-                    moves: false
-                });
-
-                $scope.currentGame = {
-                    name: newGame.name(),
-                    player: "X"
-                }
-
-                $scope.message = "Your turn! Play an X.";
-            }
-            else {
-                // Join the open game
-                rootRef.child("/vsRandomOpponent/" + $scope.lastVersusGame.name).update({
-                    hasStarted: true
-                })
-
-                $scope.currentGame = {
-                    name: $scope.lastVersusGame.name,
-                    player: "O"
-                }
-
-                $scope.message = "Other player's turn to play an O.";
-            }
-
-            // Mark the game as started
-            $scope.lastVersusGame.hasStarted = true;
-            $scope.currentGame.uberGrid = [
-                [ "", "", "" ],
-                [ "", "", "" ],
-                [ "", "", "" ]
-            ];
-            $scope.currentGame.previousMove = null;
-            $scope.currentGame.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-            $scope.currentGame.type = "vsRandomOpponent";
-            $scope.currentGame.whoseTurn = "X";
-
-
-            // Create an event handler to populate the board at each move
-            $scope.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
-            $scope.movesRef.on("child_added", $scope.handleNewMove);
-        }
-    };
-
-    /* Start a game against a computer AI */
-    $scope.startCPUGame = function() {
-        if (!$scope.currentGame) {
-            // Create new game
-            var newGame = rootRef.child("/vsCPU/").push({
-                hasStarted: true,
-                winner: false,
+        if (!$scope.lastVersusGame || $scope.lastVersusGame.hasStarted) {
+            // Create a new game in Firebase since all games are full
+            var newGame = rootRef.child("/vsRandomOpponent/").push({
+                hasStarted: false,
+                winner: "",
                 moves: false
             });
 
             $scope.currentGame = {
                 name: newGame.name(),
-                player: "X",
-                uberGrid: [
-                    [ "", "", "" ],
-                    [ "", "", "" ],
-                    [ "", "", "" ]
-                ],
-                gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                type: "vsCPU",
-                whoseTurn: "X"
+                player: "X"
             }
 
             $scope.message = "Your turn! Play an X.";
-
-            // Create an event handler to populate the board at each move
-            $scope.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
-            $scope.movesRef.on("child_added", $scope.handleNewMove);
         }
+        else {
+            // Join the open game
+            rootRef.child("/vsRandomOpponent/" + $scope.lastVersusGame.name).update({
+                hasStarted: true
+            })
+
+            $scope.currentGame = {
+                name: $scope.lastVersusGame.name,
+                player: "O"
+            }
+
+            $scope.message = "Other player's turn to play an O.";
+        }
+
+        // Mark the game as started
+        $scope.lastVersusGame.hasStarted = true;
+        $scope.currentGame.uberGrid = [
+            [ "", "", "" ],
+            [ "", "", "" ],
+            [ "", "", "" ]
+        ];
+        $scope.currentGame.previousMove = null;
+        $scope.currentGame.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        $scope.currentGame.type = "vsRandomOpponent";
+        $scope.currentGame.whoseTurn = "X";
+
+
+        // Create an event handler to populate the board at each move
+        $scope.currentGame.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
+        $scope.currentGame.movesRef.on("child_added", $scope.handleNewMove);
     };
 
-    $scope.playAIMove = function() {
+    /* Start a game against a computer AI */
+    $scope.startCPUGame = function() {
+        // Create a new game in Firebase
+        var newGame = rootRef.child("/vsCPU/").push({
+            hasStarted: true,
+            winner: false,
+            moves: false
+        });
+
+        $scope.currentGame = {
+            name: newGame.name(),
+            player: "X",
+            uberGrid: [
+                [ "", "", "" ],
+                [ "", "", "" ],
+                [ "", "", "" ]
+            ],
+            gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            type: "vsCPU",
+            whoseTurn: "X"
+        }
+
+        $scope.message = "Your turn! Play an X.";
+
+        // Create an event handler to populate the board at each move
+        $scope.currentGame.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
+        $scope.currentGame.movesRef.on("child_added", $scope.handleNewMove);
+    };
+
+    /* Joins the current MMO game against the computer */
+    $scope.joinMMOGame = function() {
+        // Join the current MMO game
+        var mmoGameRef = rootRef.child("/mmo/current/");
+        mmoGameRef.once("value", function(dataSnapshot) {
+            $timeout(function() {
+                // Get the game data
+                var gameData = dataSnapshot.val();
+
+                $scope.currentGame = {
+                    type: "mmo",
+                    name: "current",
+                    player: "X",
+                    uberGrid: [
+                        [ "", "", "" ],
+                        [ "", "", "" ],
+                        [ "", "", "" ]
+                    ],
+                    previousMove: null,
+                    gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                    whoseTurn: "X"
+                }
+
+                if (!gameData.hasStarted) {
+                    mmoGameRef.update({
+                        moves: false,
+                        suggsetions: false,
+                        winner: ""
+                    })
+
+                    // If no current MMO game exists, start a new one
+                    $scope.message = "Your turn! Play an X.";
+                }
+                else {
+                    // Otherwise, join the current MMO game
+                    // TODO: get uberGrid, previousMove, gridsValidForMove, whoseTurn, and message
+                }
+
+                // Create an event handler to populate the board at each move
+                $scope.currentGame.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
+                $scope.currentGame.movesRef.on("child_added", $scope.handleNewMove);
+
+                // Start the timer for the humans' current guess
+                $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 5000);
+            });
+        });
+    };
+
+    $scope.makeMMOMove = function() {
+        var suggestionsRef = rootRef.child("/mmo/current/suggestions");
+        suggestionsRef.once("value", function(dataSnapshot) {
+            var suggestions = [
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ],
+                [ [ 0, 0, 0], [0, 0, 0], [0, 0, 0] ]
+            ];
+
+            var numSuggestions = 0;
+            dataSnapshot.forEach(function(childSnapshot) {
+                var suggestion = childSnapshot.val();
+                suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+                ++numSuggestions;
+            });
+
+            // If there have been no suggestions, choose a random grid location
+            var maxNumSuggestions = 0;
+            var maxSuggestedGridIndex;
+            var maxSuggestedRowIndex;
+            var maxSuggestedColumnIndex;
+            if (numSuggestions == 0) {
+                // If there were no human suggestions, just select a random valid cell
+                var move = $scope.getRandomValidMove();
+                maxSuggestedGridIndex = move.gridIndex;
+                maxSuggestedRowIndex = move.rowIndex;
+                maxSuggestedColumnIndex = move.columnIndex;
+            }
+            else {
+                // Otherwise, pick the most suggested cell
+                for (var gridIndex = 0; gridIndex < 8; ++gridIndex) {
+                    for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
+                        for (var columnIndex = 0; columnIndex < 3; ++columnIndex) {
+                            var numTimesSuggested = suggestions[gridIndex][rowIndex][columnIndex];
+                            if (numTimesSuggested > maxNumSuggestions || (numTimesSuggested == maxNumSuggestions && Math.random() > 0.5)) {
+                                maxNumSuggestions = numTimesSuggested;
+                                maxSuggestedGridIndex = gridIndex;
+                                maxSuggestedRowIndex = rowIndex;
+                                maxSuggestedColumnIndex = columnIndex;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $scope.currentGame.movesRef.push({
+                player: $scope.currentGame.player,
+                gridIndex: maxSuggestedGridIndex,
+                rowIndex: maxSuggestedRowIndex,
+                columnIndex: maxSuggestedColumnIndex,
+                suggestions: dataSnapshot.val()
+            });
+
+            window.clearTimeout($scope.mmoMoveTimeout);
+        });
+    };
+
+    $scope.makeAIMove = function() {
+        var cell = $scope.getRandomValidMove();
+
+        rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/").push({
+            player: $scope.currentGame.whoseTurn,
+            gridIndex: cell.gridIndex,
+            rowIndex: cell.rowIndex,
+            columnIndex: cell.columnIndex
+        });
+    };
+
+    $scope.getRandomValidMove = function() {
         var numGridsValidForMove = $scope.currentGame.gridsValidForMove.length;
         var gridIndex = $scope.currentGame.gridsValidForMove[Math.floor(Math.random() * numGridsValidForMove)];
         var rowIndex = Math.floor(Math.random() * 3);
@@ -143,12 +260,11 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             columnIndex = Math.floor(Math.random() * 3);
         }
 
-        rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/").push({
-            player: $scope.currentGame.whoseTurn,
+        return {
             gridIndex: gridIndex,
             rowIndex: rowIndex,
             columnIndex: columnIndex
-        });
+        }
     };
 
     // Add a new move to Firebase when a valid move is made
@@ -166,12 +282,23 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             // Add the move to Firebase if it is valid
             if (fIsMoveValid)
             {
-                rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/").push({
-                    player: $scope.currentGame.player,
-                    gridIndex: gridIndex,
-                    rowIndex: rowIndex,
-                    columnIndex: columnIndex
-                });
+                if ($scope.currentGame.type == "mmo") {
+                    // If this is an MMO game, add the current choice as a move suggestion
+                    $scope.currentGame.movesRef.parent().child("suggestions").push({
+                        gridIndex: gridIndex,
+                        rowIndex: rowIndex,
+                        columnIndex: columnIndex
+                    });
+                }
+                else {
+                    // Otherwise, just submit the move to the moves node
+                    $scope.currentGame.movesRef.push({
+                        player: $scope.currentGame.player,
+                        gridIndex: gridIndex,
+                        rowIndex: rowIndex,
+                        columnIndex: columnIndex
+                    });
+                }
             }
         }
     };
@@ -228,18 +355,30 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
                 alert($scope.message);
 
-                $scope.movesRef.parent().update({
+                $scope.currentGame.movesRef.parent().update({
                     winner: uberGridWinner
                 });
 
-                $scope.movesRef.off();
+                $scope.currentGame.movesRef.off();
 
                 // Reset the game
                 $scope.resetGame();
             }
             // Otherwise, play the AI's move if it is it's turn
             else if ($scope.currentGame.type == "vsCPU" && $scope.currentGame.whoseTurn == "O") {
-                $scope.playAIMove();
+                // Let the AI make a move
+                $scope.makeAIMove();
+            }
+            else if ($scope.currentGame.type == "mmo" && $scope.currentGame.whoseTurn == "O") {
+                // Let the AI make a move
+                $scope.makeAIMove();
+
+                // Start the timer for the humans ' current guess
+                $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 5000);
+
+                $scope.currentGame.movesRef.parent().update({
+                    suggestions: "false"
+                })
             }
         });
     };
