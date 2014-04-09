@@ -4,9 +4,21 @@
     src: url("../fonts/norwester.woff");
 }
 
+@font-face {
+    /* ClearSans front by Intel Open Source Technology Center: https://01.org/clear-sans */
+    font-family: "ClearSans";
+    src: url("../fonts/clearSans.woff");
+}
+
+@font-face {
+    /* ClearSansBold front by Intel Open Source Technology Center: https://01.org/clear-sans */
+    font-family: "ClearSansBold";
+    src: url("../fonts/clearSansBold.woff");
+}
+
 body {
     /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
-    background-image: url("../images/background2.png");
+    background-image: url("../images/background.png");
 }
 
 #header {
@@ -26,21 +38,25 @@ body {
 
 #opponentSelection {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 35px;
 
     input[type="button"] {
+        font-family: "ClearSans";
+        font-size: 16px;
         border: solid 2px orange;
         background: #FBFBFB;
-        width: 200px;
+        width: 150px;
         height: 50px;
+        margin-right: 20px;
 
-        &:first-of-type {
-            margin-right: 30px;
+        &:last-of-type {
+            margin-right: 0px;
         }
     }
 }
 
 #messages {
+    font-family: "ClearSans";
     text-align: center;
     margin-bottom: 30px;
     font-size: 30px;
@@ -48,7 +64,7 @@ body {
 
 #boardWrapper {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 
     #board {
         display: inline-block;
@@ -130,10 +146,66 @@ body {
 }
 
 #howToPlay {
-    text-align: center;
+    width: 520px;
+    margin: 0 auto -10px auto;
 
     h2 {
         font-family: "Norwester";
-        margin-bottom: 40px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    p {
+        font-family: "ClearSans";
+        text-align: justify;
+        width: 520px;
+    }
+
+    .bold {
+        font-family: "ClearSansBold";;
+    }
+
+    #blue {
+        font-family: "ClearSansBold";
+        color: #009ACD;
+    }
+
+    #green {
+        font-family: "ClearSansBold";
+        color: #458B00;
+        opacity: 0.8;
+    }
+}
+
+#footer {
+    text-align: center;
+
+    p {
+        font-family: "ClearSansBold";
+        font-size: 20px;
+        display: inline-block;
+        margin: 5px 5px 10px 0;
+    }
+
+    #poweredByFirebase {
+        p {
+            margin-top: 20px;
+        }
+
+        #firebaseLogo {
+            display: inline-block;
+            width: 150px;
+            height: 30px;
+            margin-bottom: -8px;
+        }
+    }
+
+    #forkMeOnGitHub {
+        #gitHubLogo {
+            display: inline-block;
+            width: 100px;
+            height: 20px;
+            margin-bottom: -4px;
+        }
     }
 }

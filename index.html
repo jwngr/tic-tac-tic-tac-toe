@@ -16,20 +16,25 @@
     </head>
 
     <body ng-controller="TicTacTicTacToeController">
+        <!-- Header -->
         <div id="header">
             <h1>Tic-tac-tic-tac-toe</h1>
             <p>MMO tic-tac-toe, with a twist</p>
         </div>
         
+        <!-- New game -->
         <div id="opponentSelection" ng-hide="isGameInProgress()">
-            <input type="button" value="Random Opponent" ng-click="joinVersusGame()" />
+            <input type="button" value="CPU opponent" ng-click="startCPUGame()" />
+            <input type="button" value="Random opponent" ng-click="joinVersusGame()" />
             <input type="button" value="Play with the crowd" ng-click="joinMMOGame()" />
         </div>
 
+        <!-- Game messages -->
         <div id="messages">
             {{ message }}
         </div>
 
+        <!-- Tic-tac-toe board -->
         <div id="boardWrapper">
             <div id="board">
                 <div class="grid" ng-repeat="grid in grids">
@@ -44,14 +49,25 @@
             </div>
         </div>
 
+        <!-- How to play -->
         <div id="howToPlay">
             <h2>How To Play</h2>
-            <p>The goal of the game is to win the big tic-tac-toe board. In order to earn one of the nine square in the big grid, you must win the smaller tic-tac-toe board contained within it.</p>
-            <p>Where you move determines which board your opponent will then have to make a move in. For example, if you choose the top right cell of the center grid, your opponent will then have to choose a cell in the top right grid.</p>
-            <p>In order to win a grid, you must either get three of your marker in a row or get five of your marker anywhere in a grid.</p>
-            <p>If your move would force your opponent to play in a grid which has already been won, your opponent is allowed to select any open cell on the whole board.</p>
+            <p>Win the big tic-tac-toe board by getting <span class="bold">three in a row</span> - either across, down, or diagonally - or getting a <span class="bold">majority of the squares</span>. In order to earn one of the nine squares in the big board, you must win the smaller tic-tac-toe board contained within it.</p>
+            <p><span class="bold">Your opponent's previous move determines which board(s) you are allowed to play in</span>. For example, if your opponent chose the top right square of the center board, you would then have to choose an open square in the top right board.</p>
+            <p>If your opponent's previous move would force you to play in a board which has already been won, you can select any open square on the whole board.</p>
+            <p>The most recent move is shown in <span id="blue">blue</span> and your possible moves are shown in <span id="green">green</span>.</p>
         </div>
 
-        <!-- TODO: add 'Powered by Firebase' here -->
+        <!-- Footer -->
+        <div id="footer">
+            <div id="poweredByFirebase">
+                <p>Powered by</p>
+                <a href="https://www.firebase.com"><img id="firebaseLogo" src="./images/firebaseLogo.png" /></a>
+            </div>
+            <div id="forkMeOnGitHub">
+                <p>Fork me on</p>
+                <a href="https://github.com/jacobawenger/tic-tac-tic-tac-toe"><img id="gitHubLogo" src="./images/gitHubLogo.png" /></a>
+            </div>
+        </div>
     </body>
 </html>

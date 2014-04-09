@@ -164,7 +164,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     };
 
     /* Joins the current MMO game */
-    $scope.joinMMOGame = function() {
+    $scope.startCPUGame = function() {
         if (!$scope.currentGame) {
             // Create new game
             var newGame = rootRef.child("/mmo/").push({
