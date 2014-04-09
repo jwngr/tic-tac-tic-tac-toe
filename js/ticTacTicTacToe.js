@@ -36,13 +36,15 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     $scope.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
-        if ($scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.gridsValidForMove.indexOf(gridIndex) != -1) {
-            return "validForMove";
+        if ($scope.currentGame)
+        {
+            if ($scope.currentGame.player == $scope.currentGame.whoseTurn && $scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.gridsValidForMove.indexOf(gridIndex) != -1) {
+                return "validForMove";
+            }
+            else if ($scope.previousMove && $scope.previousMove.gridIndex == gridIndex && $scope.previousMove.rowIndex == rowIndex && $scope.previousMove.columnIndex == columnIndex) {
+                return "previousMove";
+            }
         }
-        else if ($scope.previousMove.gridIndex == gridIndex && $scope.previousMove.rowIndex == rowIndex && $scope.previousMove.columnIndex == columnIndex) {
-            return "previousMove";
-        }
-
     };
 
         // TODO: add Firebase offs
@@ -200,7 +202,6 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
                 if (!gridWinner) {
                     // Check for a full grid winner; if the grid is full, the player with the most cells wins the grid
-                    console.log("in");
                     var numXCells = 0;
                     var numOCells = 0;
                     for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
@@ -213,17 +214,13 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                             }
                         }
                     }
-                    console.log("numXCells: " + numXCells);
-                    console.log("numOCells: " + numOCells);
-                    if (numXCells + numOCells == 9) {
-                        if (numXCells > numOCells) {
-                            gridWinner = "X";
-                        }
-                        else {
-                            gridWinner = "O";
-                        }
+
+                    if (numXCells == 5) {
+                        gridWinner = "X";
                     }
-                    console.log("gridWinner: " + gridWinner);
+                    else if (numOCells == 5) {
+                        gridWinner = "O";
+                    }
                 }
             }
         }
