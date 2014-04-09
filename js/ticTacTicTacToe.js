@@ -31,7 +31,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
     // Keep track of the last versus game in case the current player wants to join
     $scope.lastVersusGame = null;
-    rootRef.child("/versus/").on("child_added", function(dataSnapshot) {
+    rootRef.child("/vsRandomOpponent/").on("child_added", function(dataSnapshot) {
         $scope.lastVersusGame = dataSnapshot.val();
         $scope.lastVersusGame["name"] = dataSnapshot.name();
     });
@@ -55,9 +55,9 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         if (!$scope.currentGame) {
             if (!$scope.lastVersusGame || $scope.lastVersusGame.hasStarted) {
                 // Create new game since all games are full
-                var newGame = rootRef.child("/versus/").push({
+                var newGame = rootRef.child("/vsRandomOpponent/").push({
                     hasStarted: false,
-                    hasCompleted: false,
+                    winner: "",
                     moves: false
                 });
 
@@ -70,7 +70,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             }
             else {
                 // Join the open game
-                rootRef.child("/versus/" + $scope.lastVersusGame.name).update({
+                rootRef.child("/vsRandomOpponent/" + $scope.lastVersusGame.name).update({
                     hasStarted: true
                 })
 
@@ -79,7 +79,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                     player: "O"
                 }
 
-                $scope.message = "Other player's turn to place an O.";
+                $scope.message = "Other player's turn to play an O.";
             }
 
             // Mark the game as started
@@ -91,85 +91,23 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             ];
             $scope.currentGame.previousMove = null;
             $scope.currentGame.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-            $scope.currentGame.type = "versus";
+            $scope.currentGame.type = "vsRandomOpponent";
             $scope.currentGame.whoseTurn = "X";
 
 
             // Create an event handler to populate the board at each move
-            var gameRef = rootRef.child("/versus/" + $scope.currentGame.name + "/moves/");
-            gameRef.on("child_added", function(dataSnapshot) {
-                $timeout(function() {
-                    // Update the board
-                    var move = dataSnapshot.val();
-                    $scope.grids[move.gridIndex][move.rowIndex][move.columnIndex] = move.player;
-
-                    // Update whose turn it is
-                    $scope.currentGame.whoseTurn = (move.player == "X") ? "O" : "X";
-
-                    // Set the previous move
-                    $scope.currentGame.previousMove = {
-                        gridIndex: move.gridIndex,
-                        rowIndex: move.rowIndex,
-                        columnIndex: move.columnIndex
-                    };
-
-                    // Update the message text
-                    if ($scope.currentGame.whoseTurn == $scope.currentGame.player) {
-                        $scope.message = "Your turn! Play an " + $scope.currentGame.player + ".";
-                    }
-                    else {
-                        $scope.message = "Other player's turn to place an " + $scope.currentGame.whoseTurn + ".";
-                    }
-
-                    // Check if the current grid was won
-                    $scope.currentGame.uberGrid[move.gridIndex % 3][Math.floor(move.gridIndex / 3)] = $scope.gridWon($scope.grids[move.gridIndex]);
-
-                    var nextMovesGrid = getNextMovesGrid(move.rowIndex, move.columnIndex);
-                    if ($scope.gridWon($scope.grids[nextMovesGrid])) {
-                        $scope.currentGame.gridsValidForMove = [];
-                        for (var i = 0; i < 9; ++i) {
-                            if ($scope.currentGame.uberGrid[i % 3][Math.floor(i / 3)] == "") {
-                                $scope.currentGame.gridsValidForMove.push(i);
-                            }
-                        }
-                    }
-                    else {
-                        $scope.currentGame.gridsValidForMove = [getNextMovesGrid(move.rowIndex, move.columnIndex)];
-                    }
-
-                    // Check if the uber grid was won and the game should end
-                    var uberWinner = $scope.gridWon($scope.currentGame.uberGrid);
-                    if (uberWinner) {
-                        if (uberWinner == $scope.currentGame.player) {
-                            $scope.message = "You won!! Congrats!";
-                        }
-                        else {
-                            $scope.message = "You lost :( Try again!";
-                        }
-
-                        alert($scope.message);
-
-                        gameRef.update({
-                            hasCompleted: true
-                        });
-
-                        gameRef.off();
-
-                        // Reset the game
-                        $scope.resetGame();
-                    }
-                });
-            });
+            $scope.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
+            $scope.movesRef.on("child_added", $scope.handleNewMove);
         }
     };
 
-    /* Joins the current MMO game */
+    /* Start a game against a computer AI */
     $scope.startCPUGame = function() {
         if (!$scope.currentGame) {
             // Create new game
-            var newGame = rootRef.child("/mmo/").push({
+            var newGame = rootRef.child("/vsCPU/").push({
                 hasStarted: true,
-                hasCompleted: false,
+                winner: false,
                 moves: false
             });
 
@@ -182,81 +120,15 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                     [ "", "", "" ]
                 ],
                 gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                type: "mmo",
+                type: "vsCPU",
                 whoseTurn: "X"
             }
 
             $scope.message = "Your turn! Play an X.";
 
             // Create an event handler to populate the board at each move
-            var gameRef = rootRef.child("/mmo/" + $scope.currentGame.name + "/moves/");
-            gameRef.on("child_added", function(dataSnapshot) {
-                $timeout(function() {
-                    // Update the board
-                    var move = dataSnapshot.val();
-                    $scope.grids[move.gridIndex][move.rowIndex][move.columnIndex] = move.player;
-
-                    // Update whose turn it is
-                    $scope.currentGame.whoseTurn = (move.player == "X") ? "O" : "X";
-
-                    // Set the previous move
-                    $scope.currentGame.previousMove = {
-                        gridIndex: move.gridIndex,
-                        rowIndex: move.rowIndex,
-                        columnIndex: move.columnIndex
-                    };
-
-                    // Update the message text
-                    if ($scope.currentGame.whoseTurn == $scope.currentGame.player) {
-                        $scope.message = "Your turn! Play an " + $scope.currentGame.player + ".";
-                    }
-                    else {
-                        $scope.message = "Other player's turn to place an " + $scope.currentGame.whoseTurn + ".";
-                    }
-
-                    // Check if the current grid was won
-                    $scope.currentGame.uberGrid[move.gridIndex % 3][Math.floor(move.gridIndex / 3)] = $scope.gridWon($scope.grids[move.gridIndex]);
-
-                    var nextMovesGrid = getNextMovesGrid(move.rowIndex, move.columnIndex);
-                    if ($scope.gridWon($scope.grids[nextMovesGrid])) {
-                        $scope.currentGame.gridsValidForMove = [];
-                        for (var i = 0; i < 9; ++i) {
-                            if ($scope.currentGame.uberGrid[i % 3][Math.floor(i / 3)] == "") {
-                                $scope.currentGame.gridsValidForMove.push(i);
-                            }
-                        }
-                    }
-                    else {
-                        $scope.currentGame.gridsValidForMove = [getNextMovesGrid(move.rowIndex, move.columnIndex)];
-                    }
-
-                    // Check if the uber grid was won and the game should end
-                    var uberWinner = $scope.gridWon($scope.currentGame.uberGrid);
-                    if (uberWinner) {
-                        if (uberWinner == $scope.currentGame.player) {
-                            $scope.message = "You won!! Congrats!";
-                        }
-                        else {
-                            $scope.message = "You lost :( Try again!";
-                        }
-
-                        alert($scope.message);
-
-                        gameRef.update({
-                            hasCompleted: true
-                        });
-
-                        gameRef.off();
-
-                        // Reset the game
-                        $scope.resetGame();
-                    }
-                    // Otherwise, play the AI's move if it is it's turn
-                    else if ($scope.currentGame.whoseTurn == "O") {
-                        $scope.playAIMove();
-                    }
-                });
-            });
+            $scope.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
+            $scope.movesRef.on("child_added", $scope.handleNewMove);
         }
     };
 
@@ -266,15 +138,12 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         var rowIndex = Math.floor(Math.random() * 3);
         var columnIndex = Math.floor(Math.random() * 3);
 
-        console.log(gridIndex + ", " + rowIndex + "," + columnIndex);
-
         while ($scope.grids[gridIndex][rowIndex][columnIndex] != "") {
             rowIndex = Math.floor(Math.random() * 3);
             columnIndex = Math.floor(Math.random() * 3);
         }
-        console.log("winner");
 
-        rootRef.child("/mmo/" + $scope.currentGame.name + "/moves/").push({
+        rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/").push({
             player: $scope.currentGame.whoseTurn,
             gridIndex: gridIndex,
             rowIndex: rowIndex,
@@ -305,6 +174,74 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 });
             }
         }
+    };
+
+    $scope.handleNewMove = function(dataSnapshot) {
+        $timeout(function() {
+            // Update the board
+            var move = dataSnapshot.val();
+            $scope.grids[move.gridIndex][move.rowIndex][move.columnIndex] = move.player;
+
+            // Update whose turn it is
+            $scope.currentGame.whoseTurn = (move.player == "X") ? "O" : "X";
+
+            // Set the previous move
+            $scope.currentGame.previousMove = {
+                gridIndex: move.gridIndex,
+                rowIndex: move.rowIndex,
+                columnIndex: move.columnIndex
+            };
+
+            // Update the message text
+            if ($scope.currentGame.whoseTurn == $scope.currentGame.player) {
+                $scope.message = "Your turn! Play an " + $scope.currentGame.player + ".";
+            }
+            else {
+                $scope.message = "Other player's turn to play an " + $scope.currentGame.whoseTurn + ".";
+            }
+
+            // Check if the current grid was won
+            $scope.currentGame.uberGrid[move.gridIndex % 3][Math.floor(move.gridIndex / 3)] = $scope.gridWon($scope.grids[move.gridIndex]);
+
+            var nextMovesGrid = getNextMovesGrid(move.rowIndex, move.columnIndex);
+            if ($scope.gridWon($scope.grids[nextMovesGrid])) {
+                $scope.currentGame.gridsValidForMove = [];
+                for (var i = 0; i < 9; ++i) {
+                    if ($scope.currentGame.uberGrid[i % 3][Math.floor(i / 3)] == "") {
+                        $scope.currentGame.gridsValidForMove.push(i);
+                    }
+                }
+            }
+            else {
+                $scope.currentGame.gridsValidForMove = [getNextMovesGrid(move.rowIndex, move.columnIndex)];
+            }
+
+            // Check if the uber grid was won and the game should end
+            var uberGridWinner = $scope.gridWon($scope.currentGame.uberGrid);
+            if (uberGridWinner) {
+                if (uberGridWinner == $scope.currentGame.player) {
+                    $scope.message = "You won!! Congrats!";
+                }
+                else {
+                    $scope.message = "You lost :( Try again!";
+                }
+
+                alert($scope.message);
+
+                $scope.movesRef.parent().update({
+                    winner: uberGridWinner
+                });
+
+                $scope.movesRef.off();
+
+                // Reset the game
+                $scope.resetGame();
+            }
+            // Otherwise, play the AI's move if it is it's turn
+            else if ($scope.currentGame.type == "vsCPU" && $scope.currentGame.whoseTurn == "O") {
+                $scope.playAIMove();
+            }
+        });
     };
 
     $scope.isGameInProgress = function() {
@@ -384,7 +321,7 @@ function seedDatabase() {
     for (var i = 0; i < 9; ++i) {
         var newGameRef = rootRef.child("versus").push({
             hasStarted: (i < 9) ? true : false,
-            hasCompleted: false,
+            winner: "",
             moves: false
         });
 
