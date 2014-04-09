@@ -21,7 +21,7 @@
             <p>MMO tic-tac-toe, with a twist</p>
         </div>
         
-        <div id="opponentSelection">
+        <div id="opponentSelection" ng-hide="isGameInProgress()">
             <input type="button" value="Random Opponent" ng-click="joinVersusGame()" />
             <input type="button" value="Play with the crowd" ng-click="joinMMOGame()" />
         </div>
@@ -34,7 +34,7 @@
             <div id="board">
                 <div class="grid" ng-repeat="grid in grids">
                     <div class="row" ng-repeat="row in grid" ng-hide="gridWon(grid)">
-                        <div class="cell" ng-class="getValidForMoveClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$parent.$index, $parent.$index, $index)">
+                        <div class="cell" ng-class="getCellClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$parent.$index, $parent.$index, $index)">
                             {{ cell }}
                         </div>
                     </div>
@@ -51,5 +51,7 @@
             <p>And then this</p>
             <p>And finally this</p>
         </div>
+
+        <!-- TODO: add 'Powered by Firebase' here -->
     </body>
 </html>

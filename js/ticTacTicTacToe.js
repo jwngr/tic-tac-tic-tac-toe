@@ -32,11 +32,17 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         [ "", "", "" ],
         [ "", "", "" ]
     ];
+    $scope.previousMove = null;
     $scope.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    $scope.getValidForMoveClass = function(gridIndex, rowIndex, columnIndex) {
+
+    $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
         if ($scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.gridsValidForMove.indexOf(gridIndex) != -1) {
             return "validForMove";
         }
+        else if ($scope.previousMove.gridIndex == gridIndex && $scope.previousMove.rowIndex == rowIndex && $scope.previousMove.columnIndex == columnIndex) {
+            return "previousMove";
+        }
+
     };
 
         // TODO: add Firebase offs
@@ -86,6 +92,13 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
                     // Update whose turn it is
                     $scope.currentGame.whoseTurn = (move.player == "X") ? "O" : "X";
+
+                    // Set the previous move
+                    $scope.previousMove = {
+                        gridIndex: move.gridIndex,
+                        rowIndex: move.rowIndex,
+                        columnIndex: move.columnIndex
+                    };
 
                     // Update the message text
                     if ($scope.currentGame.whoseTurn == $scope.currentGame.player) {
@@ -150,6 +163,10 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 });
             }
         }
+    };
+
+    $scope.isGameInProgress = function() {
+        return $scope.currentGame != null;
     };
 
     $scope.gridWon = function(grid) {

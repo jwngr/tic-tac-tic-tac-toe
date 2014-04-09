@@ -42,7 +42,7 @@ body {
 
 #messages {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
     font-size: 30px;
 }
 
@@ -75,6 +75,10 @@ body {
                 background: #458B00;
                 opacity: 0.5;
             }
+
+            &.previousMove {
+                color: #009ACD;
+            }
         }
 
         .row {
@@ -90,10 +94,10 @@ body {
         .grid {
             display: inline;
             float: left;
-            width: 160px;
-            height: 160px;
+            width: 155px;
+            height: 155px;
             padding: 5px;
-            border: solid 5px black;
+            border: solid 3px black;
 
             &:nth-of-type(3n + 1) {
                 border-left: none;
