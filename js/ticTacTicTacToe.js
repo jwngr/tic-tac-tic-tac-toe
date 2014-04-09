@@ -7,17 +7,17 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     // TODO: remove before shipping
     seedDatabase();
     
-    // Create a representation of an empty board
-    $scope.board = [
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ],
-        [ "", "", "", "", "", "", "", "", "" ]
+    // Initialize the grids
+    $scope.grids = [
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ],
+        [ [ "", "", ""], ["", "", ""], ["", "", ""] ]
     ];
 
     // Keep track of the last versus game in case the current player wants to join
@@ -27,15 +27,14 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         $scope.lastVersusGame["name"] = dataSnapshot.name();
     });
 
-    $scope.gridWins = [
+    $scope.uberGrid = [
         [ "", "", "" ],
         [ "", "", "" ],
         [ "", "", "" ]
     ];
     $scope.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    $scope.getValidForMoveClass = function(row, column) {
-        var grid = getGrid(row, column);
-        if ($scope.board[row][column] == "" && $scope.gridsValidForMove.indexOf(grid) != -1) {
+    $scope.getValidForMoveClass = function(gridIndex, rowIndex, columnIndex) {
+        if ($scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.gridsValidForMove.indexOf(gridIndex) != -1) {
             return "validForMove";
         }
     };
@@ -83,7 +82,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 $timeout(function() {
                     // Update the board
                     var move = dataSnapshot.val();
-                    $scope.board[move.row][move.column] = move.player;
+                    $scope.grids[move.gridIndex][move.rowIndex][move.columnIndex] = move.player;
 
                     // Update whose turn it is
                     $scope.currentGame.whoseTurn = (move.player == "X") ? "O" : "X";
@@ -96,24 +95,26 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                         $scope.currentGame.message = "Other player's turn";
                     }
 
-                    // TODO: update UI with big X or O if grid won
-                    console.log("Grid won? " + gridWon(getGrid(move.row, move.column), $scope.board));
+                    // Check if the current grid was won
+                    $scope.uberGrid[move.gridIndex % 3][Math.floor(move.gridIndex / 3)] = $scope.gridWon($scope.grids[move.gridIndex]);
 
+                    // Check if the uber grid was won
+                    if ($scope.gridWon($scope.uberGrid)) {
+                        alert($scope.gridWon($scope.uberGrid) + " WINS!!!");
+                        // TODO: end the game
+                    }
 
-
-                    var nextMovesGrid = getNextMovesGrid(move.row, move.column);
-                    console.log("Next grid: " + nextMovesGrid);
-                    if (gridWon(nextMovesGrid, $scope.board)) {
-                        console.log("woot");
+                    var nextMovesGrid = getNextMovesGrid(move.rowIndex, move.columnIndex);
+                    if ($scope.gridWon($scope.grids[nextMovesGrid])) {
                         $scope.gridsValidForMove = [];
-                        for (var gridIndex = 0; gridIndex < 9; ++gridIndex) {
-                            if (!gridWon(gridIndex, $scope.board)) {
-                                $scope.gridsValidForMove.push(gridIndex);
+                        for (var i = 0; i < 9; ++i) {
+                            if ($scope.uberGrid[i % 3][Math.floor(i / 3)]) {
+                                $scope.gridsValidForMove.push(i);
                             }
                         }
                     }
                     else {
-                        $scope.gridsValidForMove = [getNextMovesGrid(move.row, move.column)];
+                        $scope.gridsValidForMove = [getNextMovesGrid(move.rowIndex, move.columnIndex)];
                     }
                 });
             });
@@ -128,15 +129,14 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
 
     // Add a new move to Firebase when a valid move is made
     $scope.currentGame = null;
-    $scope.addMove = function(row, column) {
+    $scope.addMove = function(gridIndex, rowIndex, columnIndex) {
         // Make sure the current player is in a game and it is their turn
         if ($scope.currentGame && $scope.currentGame.player == $scope.currentGame.whoseTurn) {
             // Make sure the move is valid
             var fIsMoveValid = true;
-            if ($scope.board[row][column] != "" || $scope.gridsValidForMove.indexOf(getGrid(row, column)) == -1)
+            if ($scope.grids[gridIndex][rowIndex][columnIndex] || $scope.gridsValidForMove.indexOf(gridIndex) == -1)
             {
                 fIsMoveValid = false
-                console.log("invalid")
             }
 
             // Add the move to Firebase if it is valid
@@ -144,105 +144,82 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             {
                 rootRef.child("/versus/" + $scope.currentGame.name + "/moves/").push({
                     player: $scope.currentGame.player,
-                    row: row,
-                    column: column
+                    gridIndex: gridIndex,
+                    rowIndex: rowIndex,
+                    columnIndex: columnIndex
                 });
             }
         }
-    }
-};
+    };
 
-getGrid = function(row, column) {
-    var grids = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]
-    ];
+    $scope.gridWon = function(grid) {
+        var gridWinner = "";
 
-    return grids[Math.floor(row / 3)][Math.floor(column / 3)];
-}
-
-getNextMovesGrid = function(row, column) {
-    var grids = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]
-    ];
-
-    return grids[row % 3][column % 3];
-};
-
-
-gridWon = function(gridIndex, board) {
-    var rowStartIndex = 3 * (gridIndex % 3);
-    var columnStartIndex = 3 * (Math.floor(gridIndex / 3));
-
-    console.log(rowStartIndex + ", " + columnStartIndex);
-    
-    var grid = [
-        [ board[rowStartIndex][columnStartIndex], board[rowStartIndex][columnStartIndex + 1], board[rowStartIndex][columnStartIndex + 2] ],
-        [ board[rowStartIndex + 1][columnStartIndex], board[rowStartIndex + 1][columnStartIndex + 1], board[rowStartIndex + 1][columnStartIndex + 2] ],
-        [ board[rowStartIndex + 2][columnStartIndex], board[rowStartIndex + 2][columnStartIndex + 1], board[rowStartIndex + 2][columnStartIndex + 2] ]
-    ];
-
-    console.log(grid);
-
-    var gridWinner = "";
-
-    // Check for a win across rows
-    for (var i = 0; i < 3; ++i) {
-        if (grid[i][0] != "" && grid[i][0] == grid[i][1] && grid[i][1] == grid[i][2])
-        {
-            gridWinner = grid[i][0];
-        }
-    }
-
-    if (!gridWinner) {
-        // Check for a win across columns
+        // Check for a win across rows
         for (var i = 0; i < 3; ++i) {
-            if (grid[0][i] != "" && grid[0][i] == grid[1][i] && grid[1][i] == grid[2][i])
+            if (grid[i][0] != "" && grid[i][0] == grid[i][1] && grid[i][1] == grid[i][2])
             {
-                gridWinner = grid[0][i];
+                gridWinner = grid[i][0];
             }
         }
 
         if (!gridWinner) {
-            // Check for a win across diagnoals
-            if (grid[0][0] != "" && grid[0][0] == grid[1][1] && grid [1][1] == grid [2][2]) {
-                gridWinner = grid[0][0];
-            }
-            if (grid[0][2] != "" && grid[0][2] == grid[1][1] && grid [1][1] == grid [2][0]) {
-                gridWinner = grid[0][2];
+            // Check for a win across columns
+            for (var i = 0; i < 3; ++i) {
+                if (grid[0][i] != "" && grid[0][i] == grid[1][i] && grid[1][i] == grid[2][i])
+                {
+                    gridWinner = grid[0][i];
+                }
             }
 
             if (!gridWinner) {
-                // Check for a full grid winner; if the grid is full, the player with the most cells wins the grid
-                var numXCells = 0;
-                var numOCells = 0;
-                for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
-                    for (var columnIndex = 0; columnIndex < 3; ++ columnIndex) {
-                        if (grid[rowIndex][columnIndex] == "X") {
-                            numXCells = 0;
-                        }
-                        else if (grid[rowIndex][columnIndex] == "O") {
-                            numOCells = 0;
-                        }
-                    }
+                // Check for a win across diagnoals
+                if (grid[0][0] != "" && grid[0][0] == grid[1][1] && grid [1][1] == grid [2][2]) {
+                    gridWinner = grid[0][0];
                 }
-                if (numXCells + numOCells == 9) {
-                    if (numXCells > numOCells) {
-                        gridWinner = "X";
+                if (grid[0][2] != "" && grid[0][2] == grid[1][1] && grid [1][1] == grid [2][0]) {
+                    gridWinner = grid[0][2];
+                }
+
+                if (!gridWinner) {
+                    // Check for a full grid winner; if the grid is full, the player with the most cells wins the grid
+                    var numXCells = 0;
+                    var numOCells = 0;
+                    for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
+                        for (var columnIndex = 0; columnIndex < 3; ++ columnIndex) {
+                            if (grid[rowIndex][columnIndex] == "X") {
+                                numXCells = 0;
+                            }
+                            else if (grid[rowIndex][columnIndex] == "O") {
+                                numOCells = 0;
+                            }
+                        }
                     }
-                    else {
-                        gridWinner = "O";
+                    if (numXCells + numOCells == 9) {
+                        if (numXCells > numOCells) {
+                            gridWinner = "X";
+                        }
+                        else {
+                            gridWinner = "O";
+                        }
                     }
                 }
             }
         }
-    }
 
-    return gridWinner;
-}
+        return gridWinner;
+    };
+};
+
+getNextMovesGrid = function(rowIndex, columnIndex) {
+    var grids = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8]
+    ];
+
+    return grids[rowIndex % 3][columnIndex % 3];
+};
 
 // TODO: get rid of before shipping
 function seedDatabase() {
@@ -258,57 +235,22 @@ function seedDatabase() {
             var movesRef = newGameRef.child("moves");
             movesRef.push({
                 player: "X",
-                row: 4,
-                column: 4
+                gridIndex: 4,
+                rowIndex: 1,
+                columnIndex: 1
             });
             movesRef.push({
                 player: "O",
-                row: 5,
-                column: 5
+                gridIndex: 4,
+                rowIndex: 2,
+                columnIndex: 2
             });
             movesRef.push({
                 player: "X",
-                row: 7,
-                column: 8
+                gridIndex: 8,
+                rowIndex: 0,
+                columnIndex: 2
             });
         }
     }
-}
-
-/*
-var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"])
-    .factory("ticTacTicTacToeService", ["$firebase", function($firebase) {
-        var ref = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/versus/game0/");
-        return $firebase(ref);
-    }])
-    .controller("TicTacTicTacToeController", ["$scope", "ticTacTicTacToeService",
-        function($scope, service) {
-            $scope.moves = service;
-            $scope.board = [
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ],
-                [ "", "", "", "", "", "", "", "", "" ]
-            ];
-            console.log($scope.moves);
-            console.log($scope.moves.get(0));
-            console.log($scope.moves.value());
-            $scope.moves.forEach(function(move) {
-                alert(move);
-            });
-            $scope.addMove = function() {
-                $scope.moves.$add({
-                    player: "X",
-                    row: 4,
-                    column: 4
-                });
-            };
-        }
-    ]
-);
-*/
+};

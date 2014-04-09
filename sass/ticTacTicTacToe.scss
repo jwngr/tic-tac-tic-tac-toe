@@ -63,10 +63,6 @@ body {
             font-size: 50px;
             line-height: 55px;
 
-            &:nth-of-type(3n) {
-                border-right-width: 5px;
-            }
-
             &:first-of-type {
                 border-left: none;
             }
@@ -82,19 +78,48 @@ body {
         }
 
         .row {
-            float: none;
-            clear: both;
-
-            &:nth-of-type(3n) > .cell {
-                border-bottom-width: 5px;
-            }
-
             &:first-of-type > .cell {
                 border-top: none;
             }
 
-            &:last-of-type > .cell {
+            &:nth-of-type(3) > .cell {
                 border-bottom: none;
+            }
+        }
+
+        .grid {
+            display: inline;
+            float: left;
+            width: 160px;
+            height: 160px;
+            padding: 5px;
+            border: solid 5px black;
+
+            &:nth-of-type(3n + 1) {
+                border-left: none;
+                clear: left;
+            }
+
+            &:nth-of-type(3n) {
+                border-right: none;
+            }
+
+            &:nth-of-type(1), &:nth-of-type(2), &:nth-of-type(3) {
+                border-top: none;
+            }
+
+            &:nth-of-type(7), &:nth-of-type(8), &:nth-of-type(9) {
+                border-bottom: none;
+            }
+
+            &:last-of-type {
+                border-right: none;
+            }
+
+            .gridWinner {
+                font-family: "Norwester";
+                font-size: 130px;
+                margin-top: 20px;
             }
         }
     }

@@ -32,11 +32,14 @@
 
         <div id="boardWrapper">
             <div id="board">
-                <div class="row" ng-repeat="row in board">
-                    <div class="cell" ng-class="getValidForMoveClass($parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$index, $index)">
-                        {{ cell }}
+                <div class="grid" ng-repeat="grid in grids">
+                    <div class="row" ng-repeat="row in grid" ng-hide="gridWon(grid)">
+                        <div class="cell" ng-class="getValidForMoveClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$parent.$index, $parent.$index, $index)">
+                            {{ cell }}
+                        </div>
                     </div>
-                    <div class="gridWinner">
+
+                    <div class="gridWinner" ng-show="gridWon(grid)">{{ gridWon(grid) }}</div>
                 </div>
             </div>
         </div>
