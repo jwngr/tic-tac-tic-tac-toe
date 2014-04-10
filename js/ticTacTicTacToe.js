@@ -3,9 +3,6 @@ var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 function TicTacTicTacToeController($scope, $firebase, $timeout) {
     // Get a reference to the root of the Firebase
     var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
-
-    // TODO: remove before shipping
-    //seedDatabase();
     
     /* Resets state so that a new game can be started. */
     $scope.resetGame = function() {
@@ -187,6 +184,8 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 // Create an event handler to populate the board at each move
                 $scope.currentGame.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
                 $scope.currentGame.movesRef.on("child_added", $scope.handleNewMove);
+
+                $scope.currentGame.movesRef.parent().child("suggestions").on()
 
                 // Update the timer every second
                 $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
@@ -510,38 +509,4 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         }
         return gridWinner;
     };
-};
-
-// TODO: get rid of before shipping
-function seedDatabase() {
-    var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
-    for (var i = 0; i < 9; ++i) {
-        var newGameRef = rootRef.child("versus").push({
-            hasStarted: (i < 9) ? true : false,
-            winner: "",
-            moves: false
-        });
-
-        if (i < 9) {
-            var movesRef = newGameRef.child("moves");
-            movesRef.push({
-                player: "X",
-                gridIndex: 4,
-                rowIndex: 1,
-                columnIndex: 1
-            });
-            movesRef.push({
-                player: "O",
-                gridIndex: 4,
-                rowIndex: 2,
-                columnIndex: 2
-            });
-            movesRef.push({
-                player: "X",
-                gridIndex: 8,
-                rowIndex: 0,
-                columnIndex: 2
-            });
-        }
-    }
 };
