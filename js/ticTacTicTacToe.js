@@ -498,11 +498,13 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                         }
                     }
 
-                    if (numXCells == 5) {
-                        gridWinner = "X";
-                    }
-                    else if (numOCells == 5) {
-                        gridWinner = "O";
+                    if (numXCells + numOCells == 9) {
+                        if (numXCells > numOCells) {
+                            gridWinner = "X";
+                        }
+                        else {
+                            gridWinner = "O";
+                        }
                     }
                 }
             }
