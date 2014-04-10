@@ -1,7 +1,7 @@
 #[tic-tac-tic-tac-toe](https://tic-tac-tic-tac-toe.firebaseapp.com)
 ###Tic-tac-toe, with a twist
 
-tic-tac-tic-tac-toe is a new twist on the age old game of tic-tac-toe. Powered by Firebase, tic-tac-tic-tac-toe allows thousands of people to collaboratively and simultaneously play a multi-level game of tic-tac-toe against a computer AI.
+tic-tac-tic-tac-toe is a new twist on the age old game of tic-tac-toe. Powered by [Firebase](https://www.firebase.com), tic-tac-tic-tac-toe allows thousands of people to collaboratively and simultaneously play a multi-level game of tic-tac-toe against a computer AI.
 
 Join the fun at https://tic-tac-tic-tac-toe.firebaseapp.com!
 
