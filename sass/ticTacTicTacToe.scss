@@ -43,15 +43,19 @@ body {
     input[type="button"] {
         font-family: "ClearSans";
         font-size: 16px;
-        border: solid 2px orange;
-        background: #FBFBFB;
-        width: 150px;
+        border: solid 2px #FF9955;
+        background: #EEE;
+        width: 155px;
         height: 50px;
-        margin-right: 20px;
+        margin-right: 15px;
         cursor: pointer;
 
         &:last-of-type {
             margin-right: 0px;
+        }
+
+        &:hover {
+            background: #CCC;
         }
     }
 }
@@ -199,11 +203,15 @@ body {
 #footer {
     text-align: center;
 
+    a {
+        color: #000;
+    }
+
     p {
         font-family: "ClearSansBold";
         font-size: 20px;
         display: inline-block;
-        margin: 5px 5px 10px 0;
+        margin: 5px 12px 10px 0;
     }
 
     #poweredByFirebase {

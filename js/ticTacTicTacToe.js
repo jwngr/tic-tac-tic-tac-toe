@@ -40,7 +40,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
         if ($scope.currentGame)
         {
-            if ($scope.currentGame.player == $scope.currentGame.whoseTurn && $scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.gridsValidForMove.indexOf(gridIndex) != -1) {
+            if ($scope.currentGame.player == $scope.currentGame.whoseTurn && $scope.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1) {
                 return "validForMove";
             }
             else if ($scope.currentGame.previousMove && $scope.currentGame.previousMove.gridIndex == gridIndex && $scope.currentGame.previousMove.rowIndex == rowIndex && $scope.currentGame.previousMove.columnIndex == columnIndex) {
@@ -88,7 +88,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             [ "", "", "" ]
         ];
         $scope.currentGame.previousMove = null;
-        $scope.currentGame.gridsValidForMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        $scope.currentGame.validGridsForNextMove = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         $scope.currentGame.type = "vsRandomOpponent";
         $scope.currentGame.whoseTurn = "X";
 
@@ -115,7 +115,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 [ "", "", "" ],
                 [ "", "", "" ]
             ],
-            gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            validGridsForNextMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
             type: "vsCPU",
             whoseTurn: "X"
         }
@@ -146,33 +146,80 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                         [ "", "", "" ]
                     ],
                     previousMove: null,
-                    gridsValidForMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                    whoseTurn: "X"
+                    validGridsForNextMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                    whoseTurn: "X",
+                    secondsLeftForHumansMove: 7
                 }
 
-                if (!gameData.hasStarted) {
-                    mmoGameRef.update({
-                        moves: false,
-                        suggsetions: false,
-                        winner: ""
-                    })
+                $scope.message = "7 seconds left to choose a location for X.";
 
+                if (!gameData.hasStarted) {
                     // If no current MMO game exists, start a new one
-                    $scope.message = "Your turn! Play an X.";
+                    mmoGameRef.update({
+                        hasStarted: true,
+                        moves: false,
+                        suggestions: false,
+                        winner: ""
+                    });
+
+                    $scope.currentGame.isHost = true;
+
+                    // Start the timer for the humans' current guess
+                    $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 7000);
                 }
                 else {
                     // Otherwise, join the current MMO game
-                    // TODO: get uberGrid, previousMove, gridsValidForMove, whoseTurn, and message
+                    dataSnapshot.child("moves").forEach(function(movesSnapshot) {
+                        var move = movesSnapshot.val();
+                        $scope.grids[move.gridIndex][move.rowIndex][move.columnIndex] = move.player;
+                        $scope.currentGame.previousMove = move;
+                    });
+
+                    $scope.currentGame.whoseTurn = ($scope.currentGame.previousMove.player == "X") ? "O" : "X";
+                    console.assert($scope.currentGame.whoseTurn == "X", "It should never be the computer's turn here.");
+
+                    $scope.currentGame.validGridsForNextMove = $scope.getValidGridsForNextMove($scope.currentGame.previousMove.rowIndex, $scope.currentGame.previousMove.columnIndex);
+
+                    $scope.currentGame.secondsLeftForHumansMove = gameData.secondsLeftForHumansMove;
+                    console.log($scope.currentGame.secondsLeftForHumansMove);
                 }
 
                 // Create an event handler to populate the board at each move
                 $scope.currentGame.movesRef = rootRef.child("/" + $scope.currentGame.type + "/" + $scope.currentGame.name + "/moves/");
                 $scope.currentGame.movesRef.on("child_added", $scope.handleNewMove);
 
-                // Start the timer for the humans' current guess
-                $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 5000);
+                // Update the timer every second
+                $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
             });
         });
+    };
+
+    $scope.updateTimer = function() {
+        // Decrement the timer
+        $scope.currentGame.secondsLeftForHumansMove -= 1;
+
+        // Update the message text
+        $timeout(function() {
+            if ($scope.currentGame.secondsLeftForHumansMove == 1) {
+                $scope.message = "1 second left to choose a location for X.";
+            }
+            else {
+                $scope.message = $scope.currentGame.secondsLeftForHumansMove + " seconds left to choose a location for X.";
+            }
+        });
+
+        // If time is up, reset the timer
+        if ($scope.currentGame.secondsLeftForHumansMove == 0) {
+            window.clearInterval($scope.updateTimerInterval);
+            $scope.currentGame.secondsLeftForHumansMove = 7;
+        }
+
+        // If the current player is the host, update Firebase
+        if ($scope.currentGame.isHost) {
+            $scope.currentGame.movesRef.parent().update({
+                secondsLeftForHumansMove: $scope.currentGame.secondsLeftForHumansMove
+            });
+        }
     };
 
     $scope.makeMMOMove = function() {
@@ -250,8 +297,8 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     };
 
     $scope.getRandomValidMove = function() {
-        var numGridsValidForMove = $scope.currentGame.gridsValidForMove.length;
-        var gridIndex = $scope.currentGame.gridsValidForMove[Math.floor(Math.random() * numGridsValidForMove)];
+        var numValidGridsForNextMove = $scope.currentGame.validGridsForNextMove.length;
+        var gridIndex = $scope.currentGame.validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)];
         var rowIndex = Math.floor(Math.random() * 3);
         var columnIndex = Math.floor(Math.random() * 3);
 
@@ -274,7 +321,7 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         if ($scope.currentGame && $scope.currentGame.player == $scope.currentGame.whoseTurn) {
             // Make sure the move is valid
             var fIsMoveValid = true;
-            if ($scope.grids[gridIndex][rowIndex][columnIndex] || $scope.currentGame.gridsValidForMove.indexOf(gridIndex) == -1)
+            if ($scope.grids[gridIndex][rowIndex][columnIndex] || $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) == -1)
             {
                 fIsMoveValid = false
             }
@@ -330,18 +377,8 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
             // Check if the current grid was won
             $scope.currentGame.uberGrid[move.gridIndex % 3][Math.floor(move.gridIndex / 3)] = $scope.gridWon($scope.grids[move.gridIndex]);
 
-            var nextMovesGrid = getNextMovesGrid(move.rowIndex, move.columnIndex);
-            if ($scope.gridWon($scope.grids[nextMovesGrid])) {
-                $scope.currentGame.gridsValidForMove = [];
-                for (var i = 0; i < 9; ++i) {
-                    if ($scope.currentGame.uberGrid[i % 3][Math.floor(i / 3)] == "") {
-                        $scope.currentGame.gridsValidForMove.push(i);
-                    }
-                }
-            }
-            else {
-                $scope.currentGame.gridsValidForMove = [getNextMovesGrid(move.rowIndex, move.columnIndex)];
-            }
+            // Get the grids in which the next move can be made
+            $scope.currentGame.validGridsForNextMove = $scope.getValidGridsForNextMove(move.rowIndex, move.columnIndex);
 
             // Check if the uber grid was won and the game should end
             var uberGridWinner = $scope.gridWon($scope.currentGame.uberGrid);
@@ -370,15 +407,23 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
                 $scope.makeAIMove();
             }
             else if ($scope.currentGame.type == "mmo" && $scope.currentGame.whoseTurn == "O") {
-                // Let the AI make a move
-                $scope.makeAIMove();
+                if ($scope.currentGame.isHost) {  
+                    // Let the AI make a move
+                    $scope.makeAIMove();
 
-                // Start the timer for the humans ' current guess
-                $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 5000);
+                    // Start the timer for the humans ' current guess
+                    $scope.mmoMoveTimeout = window.setTimeout($scope.makeMMOMove, 7000);
 
-                $scope.currentGame.movesRef.parent().update({
-                    suggestions: "false"
-                })
+                    $scope.currentGame.movesRef.parent().update({
+                        suggestions: false
+                    })
+                }
+
+                // Update the message text
+                $scope.message = "7 seconds left to choose a location for X."
+
+                // Set an interval to update the timer
+                $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
             }
         });
     };
@@ -386,6 +431,29 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
     $scope.isGameInProgress = function() {
         return $scope.currentGame != null;
     };
+
+    $scope.getValidGridsForNextMove = function(rowIndex, columnIndex) {
+        // If that grid is already won, add each un-won grid to the valid grids for next move list
+        if ($scope.currentGame.uberGrid[rowIndex][columnIndex]) {
+            validGridsForNextMove = [];
+            for (var i = 0; i < 9; ++i) {
+                if ($scope.currentGame.uberGrid[i % 3][Math.floor(i / 3)] == "") {
+                    validGridsForNextMove.push(i);
+                }
+            }
+        }
+        else {
+            // Otherwise, just add that single grid
+            var grids = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8]
+            ];
+            validGridsForNextMove = [grids[rowIndex % 3][columnIndex % 3]];
+        }
+
+        return validGridsForNextMove;
+    }
 
     $scope.gridWon = function(grid) {
         var gridWinner = "";
@@ -442,16 +510,6 @@ function TicTacTicTacToeController($scope, $firebase, $timeout) {
         }
         return gridWinner;
     };
-};
-
-getNextMovesGrid = function(rowIndex, columnIndex) {
-    var grids = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]
-    ];
-
-    return grids[rowIndex % 3][columnIndex % 3];
 };
 
 // TODO: get rid of before shipping
