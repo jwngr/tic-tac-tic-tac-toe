@@ -14,9 +14,11 @@ If your opponent's previous move would force you to play in a board which has al
 
 ##Game Modes
 __CPU opponent:__ Test your wits against a computer AI.
+
 __Random opponent:__ Play against another random person on the Internet.
+
 __Play with the crowd:__ Test the wisdom of the crowd against a computer AI. You - along with every other human player - have a limited amount of time to choose a next move. After that time, the most commonly chosen square is picked as the humans' collective move.
 
 ##Inspiration
-- [Ten by Sennep (iOS)](https://itunes.apple.com/us/app/ten/id669964112?mt=8)
+- [Ten (iOS)](https://itunes.apple.com/us/app/ten/id669964112?mt=8) by Sennep
 - [Twitch Plays Pokemon](http://www.twitch.tv/twitchplayspokemon)
