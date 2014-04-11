@@ -1,3 +1,6 @@
+/***********/
+/*  FONTS  */
+/***********/
 @font-face {
     /* Norwester font by Jamie Wilson: http://jamiewilson.io/norwester/ */
     font-family: "Norwester";
@@ -16,11 +19,17 @@
     src: url("../fonts/clearSansBold.woff");
 }
 
+/****************/
+/*  BACKGROUND  */
+/****************/
 body {
     /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
     background-image: url("../images/background.png");
 }
 
+/************/
+/*  HEADER  */
+/************/
 #header {
     text-align: center;
     font-family: "Norwester";
@@ -36,7 +45,10 @@ body {
     }
 }
 
-#opponentSelection {
+/****************/
+/*  GAME TYPES  */
+/****************/
+#gameTypes {
     text-align: center;
     margin-bottom: 35px;
 
@@ -60,13 +72,19 @@ body {
     }
 }
 
-#messages {
+/*******************/
+/*  GAME MESSAGES  */
+/*******************/
+#gameMessages {
     font-family: "ClearSans";
     text-align: center;
     margin-bottom: 30px;
     font-size: 30px;
 }
 
+/*******************************/
+/*  TIC-TAC-TIC-TAC-TOE BOARD  */
+/*******************************/
 #boardWrapper {
     text-align: center;
     margin-bottom: 30px;
@@ -80,9 +98,9 @@ body {
             border: solid 1px black;
             width: 50px;
             height: 50px;
-            font-family: "Norwester";
+            /*font-family: "Norwester";
             font-size: 50px;
-            line-height: 55px;
+            line-height: 55px;*/
 
             &:first-of-type {
                 border-left: none;
@@ -98,7 +116,12 @@ body {
             }
 
             &.previousMove {
-                color: #009ACD;
+                background: #A4D3EE;
+            }
+
+            & > span {
+                margin: 11px 0 0 0;
+
             }
         }
 
@@ -150,10 +173,26 @@ body {
     }
 }
 
-.bold {
-    font-family: "ClearSansBold";;
+/****************/
+/*  SCOREBOARD  */
+/****************/
+#scoreboard {
+    text-align: center;
+
+    h2 {
+        font-family: "Norwester";
+        margin-bottom: 20px;
+    }
+
+    span {
+        font-family: "Norwester";
+        font-size: 30px;
+    }
 }
 
+/******************/
+/*  INSTRUCTIONS  */
+/******************/
 #howToPlay {
     width: 520px;
     margin: 0 auto 30px auto;
@@ -170,6 +209,9 @@ body {
         width: 520px;
     }
 
+    .bold {
+        font-family: "ClearSansBold";;
+    }
 
     #blue {
         font-family: "ClearSansBold";
@@ -185,7 +227,7 @@ body {
 
 #gameModes {
     width: 520px;
-    margin: 0 auto -10px auto;
+    margin: 0 auto 30px auto;
 
     h2 {
         font-family: "Norwester";
@@ -198,41 +240,31 @@ body {
         text-align: justify;
         width: 520px;
     }
+
+    .bold {
+        font-family: "ClearSansBold";;
+    }
 }
 
-#footer {
-    text-align: center;
+/************/
+/*  FOOTER  */
+/************/
+#firebaseBadge {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+}
 
-    a {
-        color: #000;
-    }
+#gitHubStarButton {
+    position: fixed;
+    right: 10px;
+    bottom: 40px;
+    //padding-left: 13px;
+}
 
-    p {
-        font-family: "ClearSansBold";
-        font-size: 20px;
-        display: inline-block;
-        margin: 5px 12px 10px 0;
-    }
-
-    #poweredByFirebase {
-        p {
-            margin-top: 20px;
-        }
-
-        #firebaseLogo {
-            display: inline-block;
-            width: 150px;
-            height: 30px;
-            margin-bottom: -8px;
-        }
-    }
-
-    #forkMeOnGitHub {
-        #gitHubLogo {
-            display: inline-block;
-            width: 100px;
-            height: 20px;
-            margin-bottom: -4px;
-        }
-    }
+#gitHubFollowButton {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    //padding-left: 13px;
 }

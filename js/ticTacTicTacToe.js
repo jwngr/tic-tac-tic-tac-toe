@@ -1,9 +1,12 @@
 var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 
-app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
-    function($scope, $firebase, $timeout) {
+app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSimpleLogin", "$timeout",
+    function($scope, $firebase, $firebaseSimpleLogin, $timeout) {
         // Get a reference to the root of the Firebase
         $scope.rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
+
+        // Initialize the Firebase simple login factory
+        $scope.loginObj = $firebaseSimpleLogin($scope.rootRef);
         
         /* Returns a completely empty grid */
         $scope.getEmptyGrid = function() {
@@ -45,6 +48,15 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
             }
         };
 
+        $scope.getCellLogo = function(marker) {
+            if (marker == "X") {
+                return "csmb-flat csmb-round github-alt"
+            }
+            else if (marker == "O") {
+                return "csmb-flat csmb-round facebook alt";
+            }
+        };
+
         /* Starts a single-player game against a computer AI */
         $scope.playCPU = function() {
             // Reset the game
@@ -70,7 +82,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                         [ "", "", "" ]
                     ],
                     previousMove: false,
-                    validGridsForNextMove: "0, 1, 2, 3, 4, 5, 6, 7, 8, 9"
+                    validGridsForNextMove: "0, 1, 2, 3, 4, 5, 6, 7, 8"
                 };
 
                 // Keep track of the player's marker and the message text outside of Firebase
@@ -101,7 +113,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
 
                 // If the last game has already started, createa a new one
                 if (gameData.hasStarted) {
-                    console.log("new game");
                     vsRandomOpponentRef.$add({
                     }).then(function(newGameRef) {
                         // Set the initial state of the single-player game
@@ -118,7 +129,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                                 [ "", "", "" ]
                             ],
                             previousMove: false,
-                            validGridsForNextMove: "0, 1, 2, 3, 4, 5, 6, 7, 8, 9"
+                            validGridsForNextMove: "0, 1, 2, 3, 4, 5, 6, 7, 8"
                         };
 
                         // Keep track of the player's marker and the message text outside of Firebase
@@ -153,7 +164,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
 
                 // Otherwise, join the open game
                 else {
-                    console.log("old game");
                     // Get the game data from Firebase and mark it as started
                     $scope.currentGame = gameData;
                     $scope.currentGame.hasStarted = true;
@@ -191,8 +201,17 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
             // Reset the game
             $scope.resetGame();
 
+            $scope.loginObj.$login("github", {
+                debug: true // TODO: get rid of this
+            }).then(function(user) {
+               console.log("Logged in as: ", user.uid);
+               console.log(user);
+            }, function(error) {
+               console.error("Login failed: ", error);
+            });
+
             // Join the current MMO game
-            var mmoGameRef = $scope.rootRef.child("/mmo/current/");
+            /*var mmoGameRef = $scope.rootRef.child("/mmo/current/");
             mmoGameRef.once("value", function(dataSnapshot) {
                 $timeout(function() {
                     // Get the game data
@@ -208,7 +227,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                             [ "", "", "" ]
                         ],
                         previousMove: null,
-                        validGridsForNextMove: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        validGridsForNextMove: "0, 1, 2, 3, 4, 5, 6, 7, 8",
                         whoseTurn: "X",
                         secondsLeftForHumansMove: 7
                     }
@@ -221,54 +240,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                             hasStarted: true,
                             moves: false,
                             suggestions: false,
-                            winner: "",
-                            voting: {
-                                grid0: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid1: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid2: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid3: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid4: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid5: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid6: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid7: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                },
-                                grid8: {
-                                    x0: { y0: 0, y1: 0, y2: 0 },
-                                    x1: { y0: 0, y1: 0, y2: 0 },
-                                    x2: { y0: 0, y1: 0, y2: 0 }
-                                }
-                            }
+                            winner: ""
                         });
 
                         $scope.currentGame.isHost = true;
@@ -301,7 +273,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                     // Update the timer every second
                     $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
                 });
-            });
+            });*/
         };
 
         $scope.updateTimer = function() {
@@ -410,9 +382,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
 
         /* Returns a random grid cell in which the next move can be made */
         $scope.getRandomValidMove = function() {
+            // Get the valid grids for next move as an array
+            var validGridsForNextMove = $scope.currentGame.validGridsForNextMove.split(",");
+
             // Randomly choose one of the valid grids to make a move in
-            var numValidGridsForNextMove = $scope.currentGame.validGridsForNextMove.length;
-            var gridIndex = $scope.currentGame.validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)];
+            var numValidGridsForNextMove = validGridsForNextMove.length;
+            var gridIndex = validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)];
             
             // Keep looping until we find cell coordinates for a cell which has not yet been earned
             var rowIndex = Math.floor(Math.random() * 3);
@@ -433,7 +408,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
         // Add a new move to Firebase when a valid move is made
         $scope.addMove = function(gridIndex, rowIndex, columnIndex) {
             // Make sure the current player is in a game and it is their turn
-            if ($scope.currentGame && ($scope.currentGame.type != "vsRandomOpponent" || $scope.player == $scope.currentGame.whoseTurn)) {
+            if ($scope.currentGame.hasStarted && ($scope.currentGame.type != "vsRandomOpponent" || $scope.player == $scope.currentGame.whoseTurn)) {
                 // Make sure the move is valid
                 if ($scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
                     // Update the correct cell in grids
@@ -540,7 +515,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$timeout",
                     [3, 4, 5],
                     [6, 7, 8]
                 ];
-                validGridsForNextMove = [grids[rowIndex % 3][columnIndex % 3]];
+                validGridsForNextMove = [grids[rowIndex][columnIndex]];
             }
 
             // Return the valid grids for the next move as a string
