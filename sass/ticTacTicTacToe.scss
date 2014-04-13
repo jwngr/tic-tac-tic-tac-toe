@@ -112,16 +112,16 @@ body {
     }
 }
 
-/******************/
-/*  MOVES TICKER  */
-/******************/
-#movesTicker {
+/*************************/
+/*  PLAY BY PLAY TICKER  */
+/*************************/
+#playByPlayTicker {
     float: left;
     width: 200px;
     height: 500px;
     border: solid 5px black;
 
-    #movesTickerScrollContainer {
+    #playByPlayTickerScrollContainer {
         width: 100%;
         height: 454px;
         overflow-y: scroll;
@@ -136,9 +136,13 @@ body {
         border-bottom: solid 5px #000;
     }
 
-    .move {
+    .event {
         border-bottom: solid 2px #000;
         height: 50px;
+
+        &.move {
+            background: $blue;
+        }
 
         img {
             float: left;

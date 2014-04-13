@@ -71,15 +71,15 @@
                 </div>
             </div>
 
-            <!-- Moves ticker -->
-            <div id="movesTicker">
+            <!-- Play by play ticker -->
+            <div id="playByPlayTicker">
                 <p>Play By Play</p>
-                <div id="movesTickerScrollContainer">
-                    <div id="moves" ng-repeat="move in currentGame.moves | reverse">
-                        <div class="move">
-                            <img ng-src="{{ move.imageUrl }}" />
+                <div id="playByPlayTickerScrollContainer">
+                    <div id="event" ng-repeat="event in currentGame.events | reverse">
+                        <div class="event" ng-class="event.type">
+                            <img ng-src="{{ event.imageUrl }}" />
                             <div class="textWrapper">
-                                <p>{{ move.username }} chose [{{ move.gridIndex }}, {{ move.rowIndex }}, {{ move.columnIndex }}]</p>
+                                <p>{{ event.text }}</p>
                             </div>
                             <div style="clear: both;"></div>
                         </div>
