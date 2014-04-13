@@ -50,29 +50,33 @@
                     <!-- Small tic-tac-toe grid -->
                     <div class="row" ng-repeat="row in grid" ng-hide="getGridWinner(grid)">
                         <div class="cell" ng-class="getCellClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$parent.$index, $parent.$index, $index)">
-                            <img ng-show="cell == 'X'" ng-src="./images/gitHubLogo.png" />
-                            <img ng-show="cell == 'O'" ng-src="./images/twitterLogo.png" />
+                            <img src="./images/gitHubLogo.png" ng-show="cell == 'X'" />
+                            <img src="./images/twitterLogo.png" ng-show="cell == 'O'" />
                         </div>
                     </div>
 
                     <!-- Grid winner -->
                     <div class="gridWinner" ng-show="getGridWinner(grid)">
-                        <img ng-show="getGridWinner(grid) == 'X'" ng-src="./images/gitHubLogo.png" />
-                        <img ng-show="getGridWinner(grid) == 'O'" ng-src="./images/twitterLogo.png" />
+                        <img src="./images/gitHubLogo.png" ng-show="getGridWinner(grid) == 'X'" />
+                        <img src="./images/twitterLogo.png" ng-show="getGridWinner(grid) == 'O'" />
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Scoreboard -->
+        <h2>Scoreboard</h2>
         <div id="scoreboard">
-            <h2>Scoreboard</h2>
-            <p>
-                <span class="csmb-flat csmb-round github-alt">GitHub Alt</span>
-                <span>107 - 98<span>
-                <span class="csmb-flat csmb-round facebook alt">Facebook Alt</span>
-                <span class="csmb-flat csmb-round twitter">Twitter</span>
-                <span class="csmb-flat csmb-round gplus">Google+</span>
-            </p>
+            <div id="gitHubScore">
+                <img src="./images/gitHubLogo.png" />
+                <p>49</p>
+            </div>
+            <div id="scoreboardDivider"></div>
+            <div id="twitterScore">
+                <p>56</p>
+                <img src="./images/twitterLogo.png" />
+            </div>
+            <div style="clear: both;"></div>
         </div>
 
         <!-- How to play -->

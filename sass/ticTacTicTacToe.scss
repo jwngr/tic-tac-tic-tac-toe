@@ -217,17 +217,44 @@ body {
 /****************/
 /*  SCOREBOARD  */
 /****************/
-#scoreboard {
+h2 {
+    font-family: "Norwester";
+    margin-bottom: 20px;
     text-align: center;
+}
 
-    h2 {
-        font-family: "Norwester";
-        margin-bottom: 20px;
+#scoreboard {
+    width: 270px;
+    margin: 0 auto 0 auto;
+    border: solid 5px #000;
+    
+    #gitHubScore, #twitterScore {
+        width: 130px;
+        height: 60px;
+        float: left;
+        text-align: center;
+
+        img {
+            display: inline;
+            width: 50px;
+            height: 50px;
+            padding: 5px;
+        }
+
+        p {
+            display: inline;
+            position: relative;
+            top: -13px;
+            font-family: "Norwester";
+            font-size: 40px;
+        }
     }
 
-    span {
-        font-family: "Norwester";
-        font-size: 30px;
+    #scoreboardDivider {
+        float: left;
+        height: 60px;
+        border-left: solid 5px #000;
+        margin: 0 4px 0 1px;
     }
 }
 
