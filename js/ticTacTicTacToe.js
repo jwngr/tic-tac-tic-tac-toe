@@ -1,5 +1,11 @@
 var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 
+app.filter('reverse', function() {
+  return function(items) {
+    return (items) ? items.slice().reverse() : [];
+  };
+});
+
 app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSimpleLogin", "$timeout",
     function($scope, $firebase, $firebaseSimpleLogin, $timeout) {
         // Get a reference to the root of the Firebase
@@ -35,6 +41,14 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             $scope.resetGame();
         });
 
+        // Get the number of GitHub and Twitter wins
+        var statsRef = $firebase($scope.rootRef).$child("stats");
+        statsRef.$on("loaded", function(initialData) {
+            $scope.stats = initialData;
+            statsRef.$bind($scope, "stats");
+            statsRef.$off();
+        });
+
         /* Returns the CSS class the current cell should have */
         $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
             if ($scope.currentGame.hasStarted && !$scope.currentGame.winner)
@@ -65,7 +79,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     whoseTurn: "X",
                     hasStarted: true,
                     winner: "",
-                    // moves: false // TODO: either add or remove this?
                     grids: $scope.getEmptyGrid(),
                     uberGrid: [
                         [ "", "", "" ],
@@ -112,7 +125,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                             whoseTurn: "",
                             hasStarted: false,
                             winner: "",
-                            // moves: false // TODO: either add or remove this?
                             grids: $scope.getEmptyGrid(),
                             uberGrid: [
                                 [ "", "", "" ],
@@ -186,6 +198,22 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 }
             });
         };
+
+        $scope.joinGame = function(provider) {
+            $scope.loginObj.$login(provider, {
+                debug: true // TODO: get rid of this
+            }).then(function(user) {
+               console.log("Logged in as: ", user.uid);
+               console.log(user);
+               $scope.user = user;
+            }, function(error) {
+               console.error("Login failed: ", error);
+            });
+        };
+
+        $scope.loginWithTwitter = function() {
+
+        }
 
         /* Starts or joins an MMO game */
         $scope.playMMO = function() {
@@ -405,6 +433,20 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     // Update the correct cell in grids
                     $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] = $scope.currentGame.whoseTurn;
 
+                    if (!$scope.currentGame.moves) {
+                        $scope.currentGame.moves = [];
+                    }
+                    $scope.currentGame.moves.push({
+                        username: ($scope.user) ? $scope.user.username : $scope.currentGame.whoseTurn,
+                        imageUrl: ($scope.user) ? (($scope.user.provider == "github") ? $scope.user.avatar_url : $scope.user.profile_image_url) : "./images/user.png",
+                        gridIndex: gridIndex,
+                        rowIndex: rowIndex,
+                        columnIndex: columnIndex
+                    });
+
+                    console.log(($scope.user) ? $scope.user.avatar_url : "./images/user.png");
+                    // TODO: make sure the list doesn't get too long
+
                     // Update whose turn it is
                     $scope.currentGame.whoseTurn = ($scope.currentGame.whoseTurn == "X") ? "O" : "X";
 
@@ -442,6 +484,14 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                         alert($scope.message);
 
                         $scope.currentGame.winner = uberGridWinner;
+
+                        // Increment the number of teams wins
+                        if (uberGridWinner == "X") {
+                            $scope.stats.gitHubWins += 1;
+                        }
+                        else {
+                            $scope.stats.twitterWins += 1;
+                        }
 
                         // Unbind the current game from the Firebase
                         // TODO: is there a way to do this after $scope.currentGame has been updated?

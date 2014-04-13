@@ -9,8 +9,6 @@
         <script src="https://cdn.firebase.com/js/simple-login/1.3.0/firebase-simple-login.js"></script>
         <script src="https://cdn.firebase.com/libs/angularfire/0.7.1/angularfire.min.js"></script>
 
-        <link rel="stylesheet" href="css/socialIcons.css" />
-
         <!-- Custom JS files -->
         <script src="js/ticTacTicTacToe.js"></script>
 
@@ -24,11 +22,19 @@
             <h1>Tic-tac-tic-tac-toe</h1>
             <p>Tic-tac-toe, with a multiplayer twist</p>
         </div>
-        
-        <!-- Choose a team -->
-        <div id="chooseTeam" ng-hide="currentGame.hasStarted && !currentGame.winner">
-            <div ng-click="loginWithGitHub()"><span class="csmb-flat csmb-round github-alt" style="float: left;">GitHub Alt</span><span>GitHub</span></div>
-            <div ng-click="loginWithTwitter()"><span class="csmb-flat csmb-round twitter">Twitter</span> Twitter</div>
+
+        <!-- Scoreboard -->
+        <h2>Scoreboard</h2>
+        <div id="scoreboard">
+            <div id="gitHubScore">
+                <img src="./images/gitHubLogo.png" ng-click="joinGame('gitHub')" />
+                <p>{{ stats.gitHubWins }}</p>
+            </div>
+            <div id="scoreboardDivider"></div>
+            <div id="twitterScore">
+                <p>{{ stats.twitterWins }}</p>
+                <img src="./images/twitterLogo.png" ng-click="joinGame('twitter')" />
+            </div>
         </div>
 
         <!-- Game types -->
@@ -43,8 +49,10 @@
             {{ message }}
         </div>
 
-        <!-- Tic-tac-toe grids -->
+        
+
         <div id="boardWrapper">
+            <!-- Tic-tac-toe grids -->
             <div id="board">
                 <div class="grid" ng-repeat="grid in currentGame.grids">
                     <!-- Small tic-tac-toe grid -->
@@ -62,20 +70,23 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Scoreboard -->
-        <h2>Scoreboard</h2>
-        <div id="scoreboard">
-            <div id="gitHubScore">
-                <img src="./images/gitHubLogo.png" />
-                <p>49</p>
+            <!-- Moves ticker -->
+            <div id="movesTicker">
+                <p>Play By Play</p>
+                <div id="movesTickerScrollContainer">
+                    <div id="moves" ng-repeat="move in currentGame.moves | reverse">
+                        <div class="move">
+                            <img ng-src="{{ move.imageUrl }}" />
+                            <div class="textWrapper">
+                                <p>{{ move.username }} chose [{{ move.gridIndex }}, {{ move.rowIndex }}, {{ move.columnIndex }}]</p>
+                            </div>
+                            <div style="clear: both;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="scoreboardDivider"></div>
-            <div id="twitterScore">
-                <p>56</p>
-                <img src="./images/twitterLogo.png" />
-            </div>
+
             <div style="clear: both;"></div>
         </div>
 
