@@ -48,15 +48,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             }
         };
 
-        $scope.getCellLogo = function(marker) {
-            if (marker == "X") {
-                return "csmb-flat csmb-round github-alt"
-            }
-            else if (marker == "O") {
-                return "csmb-flat csmb-round facebook alt";
-            }
-        };
-
         /* Starts a single-player game against a computer AI */
         $scope.playCPU = function() {
             // Reset the game

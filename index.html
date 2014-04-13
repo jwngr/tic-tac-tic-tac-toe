@@ -25,7 +25,13 @@
             <p>Tic-tac-toe, with a multiplayer twist</p>
         </div>
         
-        <!-- New game -->
+        <!-- Choose a team -->
+        <div id="chooseTeam" ng-hide="currentGame.hasStarted && !currentGame.winner">
+            <div ng-click="loginWithGitHub()"><span class="csmb-flat csmb-round github-alt" style="float: left;">GitHub Alt</span><span>GitHub</span></div>
+            <div ng-click="loginWithTwitter()"><span class="csmb-flat csmb-round twitter">Twitter</span> Twitter</div>
+        </div>
+
+        <!-- Game types -->
         <div id="gameTypes" ng-hide="currentGame.hasStarted && !currentGame.winner">
             <input type="button" value="CPU opponent" ng-click="playCPU()" />
             <input type="button" value="Random opponent" ng-click="playRandomOpponent()" />
@@ -37,17 +43,23 @@
             {{ message }}
         </div>
 
-        <!-- Tic-tac-toe board -->
+        <!-- Tic-tac-toe grids -->
         <div id="boardWrapper">
             <div id="board">
                 <div class="grid" ng-repeat="grid in currentGame.grids">
+                    <!-- Small tic-tac-toe grid -->
                     <div class="row" ng-repeat="row in grid" ng-hide="getGridWinner(grid)">
                         <div class="cell" ng-class="getCellClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="addMove($parent.$parent.$index, $parent.$index, $index)">
-                            <span ng-class="getCellLogo(cell)" ></span>
+                            <img ng-show="cell == 'X'" ng-src="./images/gitHubLogo.png" />
+                            <img ng-show="cell == 'O'" ng-src="./images/twitterLogo.png" />
                         </div>
                     </div>
 
-                    <div class="gridWinner" ng-show="getGridWinner(grid)">{{ getGridWinner(grid) }}</div>
+                    <!-- Grid winner -->
+                    <div class="gridWinner" ng-show="getGridWinner(grid)">
+                        <img ng-show="getGridWinner(grid) == 'X'" ng-src="./images/gitHubLogo.png" />
+                        <img ng-show="getGridWinner(grid) == 'O'" ng-src="./images/twitterLogo.png" />
+                    </div>
                 </div>
             </div>
         </div>

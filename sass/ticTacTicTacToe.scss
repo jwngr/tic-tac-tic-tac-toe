@@ -19,6 +19,13 @@
     src: url("../fonts/clearSansBold.woff");
 }
 
+/************/
+/*  COLORS  */
+/************/
+$orange: #FF9955;
+$blue: #A4D3EE;
+$green: #458B00;
+
 /****************/
 /*  BACKGROUND  */
 /****************/
@@ -55,7 +62,7 @@ body {
     input[type="button"] {
         font-family: "ClearSans";
         font-size: 16px;
-        border: solid 2px #FF9955;
+        border: solid 2px $orange;
         background: #EEE;
         width: 155px;
         height: 50px;
@@ -68,6 +75,32 @@ body {
 
         &:hover {
             background: #CCC;
+        }
+    }
+}
+
+#chooseTeam {
+    text-align: center;
+    margin-bottom: 35px;
+
+    & > div {
+        display: inline-block;
+        font-family: "ClearSans";
+        font-size: 16px;
+        border-radius: 10px;
+        background: $orange;
+        width: 155px;
+        height: 35px;
+        margin-right: 15px;
+        padding-top: 10px;
+        cursor: pointer;
+
+        &:last-of-type {
+            margin-right: 0px;
+        }
+
+        &:hover {
+            background: darken($orange, 20%);
         }
     }
 }
@@ -111,17 +144,19 @@ body {
             }
 
             &.validForMove {
-                background: #458B00;
+                background: $green;
                 opacity: 0.5;
+                cursor: pointer;
             }
 
             &.previousMove {
-                background: #A4D3EE;
+                background: $blue;
             }
 
-            & > span {
-                margin: 11px 0 0 0;
-
+            & > img {
+                width: 36px;
+                height: 36px;
+                margin-top: 7px;
             }
         }
 
@@ -165,9 +200,14 @@ body {
             }
 
             .gridWinner {
-                font-family: "Norwester";
-                font-size: 130px;
-                margin-top: 20px;
+                width: 155px;
+                height: 155px;
+
+                & > img {
+                    width: 120px;
+                    height: 120px;
+                    margin-top: 18px;
+                }
             }
         }
     }
@@ -215,12 +255,12 @@ body {
 
     #blue {
         font-family: "ClearSansBold";
-        color: #009ACD;
+        color: darken($blue, 20%);
     }
 
     #green {
         font-family: "ClearSansBold";
-        color: #458B00;
+        color: $green;
         opacity: 0.8;
     }
 }
