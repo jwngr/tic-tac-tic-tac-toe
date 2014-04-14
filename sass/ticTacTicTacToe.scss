@@ -25,6 +25,7 @@
 $orange: #FF9955;
 $blue: #A4D3EE;
 $green: #9CBC7F;
+$gray: #CCCCCC;
 
 /****************/
 /*  BACKGROUND  */
@@ -73,7 +74,7 @@ h2 {
     font-size: 14px;
 
     &:hover {
-        background: #BBB;
+        background: $gray;
     }
 }
 
@@ -94,7 +95,7 @@ h2 {
         padding-top: 5px;
 
         &:hover {
-            background: #BBB;
+            background: $gray;
         }
 
         img {
@@ -162,6 +163,10 @@ h2 {
             &.validForMove {
                 background: $green;
                 cursor: pointer;
+            }
+
+            &.suggestedMove {
+                background: $orange;
             }
 
             &.previousMove {
@@ -245,11 +250,12 @@ h2 {
         margin: 0;
         padding: 3px 0 3px 0;
         border-bottom: solid 5px #000;
+        background: $gray;
     }
 
     #playByPlayTicker {
         width: 100%;
-        height: 314px;
+        height: 244px;
         overflow-y: scroll;
 
         .event {
@@ -262,6 +268,10 @@ h2 {
 
             &.newGame, &.gameOver {
                 background: $green;
+            }
+
+            &.suggestion {
+                background: $orange;
             }
 
             img {
@@ -323,6 +333,18 @@ h2 {
             margin: 0 0 0 5px;
         }
     }
+
+    #secondsUntilNextMove {
+        width: 100%;
+        height: 30px;
+        border-bottom: solid 5px #000;
+
+        & > p {
+            font-family: "Norwester";
+            font-size: 30px;
+            margin: 3px 0 0 0;
+        }
+    }
 }
 
 /******************/
@@ -357,6 +379,11 @@ h2 {
         font-family: "ClearSansBold";
         color: darken($green, 10%);
     }
+
+    #orange {
+        font-family: "ClearSansBold";
+        color: darken($orange, 10%);
+    }
 }
 
 /************/
@@ -373,13 +400,10 @@ h2 {
     margin-bottom: 20px;
 
     #gitHubStarButton {
-        right: 10px;
-        bottom: 40px;
         margin-right: 10px;
     }
 
     #gitHubFollowButton {
-        right: 10px;
-        bottom: 10px;
+        margin-right: 10px;
     }
 }

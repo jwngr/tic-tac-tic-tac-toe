@@ -84,6 +84,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             $scope.currentGame = initialData;
             mmoGameRef.$bind($scope, "currentGame");
 
+            // Reset the logged-in user's guess every time the grids are updated
+            $firebase($scope.rootRef).$child("/mmo/current/grids/").$on("change", function(dataSnapshot) {
+                if ($scope.loggedInUser) {
+                    $scope.loggedInUser.suggestedMove = null;
+                }
+            });
+
             // If the current user is logged in, store them and setup the MMO game
             $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
                 if (loggedInUser) {
@@ -110,7 +117,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             if ($scope.currentGame.hasStarted && !$scope.currentGame.winner)
             {
                 if ($scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1) {
-                    return "validForMove";
+                    if ($scope.loggedInUser.suggestedMove && $scope.loggedInUser.suggestedMove.gridIndex == gridIndex && $scope.loggedInUser.suggestedMove.rowIndex == rowIndex && $scope.loggedInUser.suggestedMove.columnIndex == columnIndex) {
+                        return "suggestedMove";
+                    }
+                    else {
+                        return "validForMove";
+                    }
                 }
                 else if ($scope.currentGame.previousMove && $scope.currentGame.previousMove.gridIndex == gridIndex && $scope.currentGame.previousMove.rowIndex == rowIndex && $scope.currentGame.previousMove.columnIndex == columnIndex) {
                     return "previousMove";
@@ -183,12 +195,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // If it is the logged-in user's team's turn, tell them how much time is left to make it
                 if (whoseTurnTeam == loggedInUsersTeam) {
-                    if ($scope.currentGame.numSecondsUntilNextMove == 1) {
-                        $scope.message = "1 second for Team " + whoseTurnTeam + " to choose a move.";
-                    }
-                    else {
-                        $scope.message = $scope.currentGame.numSecondsUntilNextMove + " seconds left for Team " + whoseTurnTeam + " to choose a move.";
-                    }
+                    $scope.message = "Suggest a move for Team " + whoseTurnTeam + "!";
                 }
                 // Otherwise, just say that they are waiting for the other team to move
                 else {
@@ -199,12 +206,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             else {
                 var uberGridWinner = $scope.getGridWinner($scope.currentGame.uberGrid);
                 var winningTeam = (uberGridWinner == "github") ? "GitHub" : "Twitter";
-                if ($scope.currentGame.numSecondsUntilNextMove == 1) {
-                    $scope.message = "Team " + winningTeam + " wins! New game starting in 1 second.";
-                }
-                else {
-                    $scope.message = "Team " + winningTeam + " wins! New game starting in " + $scope.currentGame.numSecondsUntilNextMove + " seconds.";
-                }
+                $scope.message = "Team " + winningTeam + " wins! A new game will start soon.";
             }
         };
 
@@ -278,9 +280,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
         /* Adds a suggestion from the logged-in player for his team's move */
         $scope.suggestMove = function(gridIndex, rowIndex, columnIndex) {
-            // TODO: limit this to one per person
-            // Make sure a game has started, the logged-in player's team is up, and the move is valid
-            if ($scope.currentGame.hasStarted && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
+            // Make sure a game has started, the logged-in player's team is up, they have not guessed before, and the move is valid
+            if ($scope.currentGame.hasStarted && $scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && !$scope.loggedInUser.suggestedMove && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
                 // Get the image and username of the logged-in player
                 var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
                 var username = $scope.loggedInUser.username;
@@ -294,6 +295,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Add the suggestion to Firebase
                 $scope.currentGame.suggestions[gridIndex][rowIndex][columnIndex] += 1;
+
+                // Save the logged-in users's suggested guess so they cannot guess again until the next round
+                $scope.loggedInUser.suggestedMove = {
+                    gridIndex: gridIndex,
+                    rowIndex: rowIndex,
+                    columnIndex: columnIndex
+                };
             }
         };
 
@@ -329,6 +337,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Update the number of players for the current team
             var numSuggestions = $scope.getNumSuggestions();
+            console.log(numSuggestions);
             if ($scope.currentGame.whoseTurn == "github") {
                 $scope.stats.numCurrentPlayers.github = numSuggestions;
             }
