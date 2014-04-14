@@ -327,7 +327,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             var imageUrl = ($scope.currentGame.whoseTurn == "github") ? "./images/gitHubLogo.png" : "./images/twitterLogo.png";
             var team = ($scope.currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
 
-            // TODO: make sure the events list doesn't get too long
             // Create an event for the current team's move
             $scope.stats.events.push({
                 imageUrl: imageUrl,
@@ -337,7 +336,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Update the number of players for the current team
             var numSuggestions = $scope.getNumSuggestions();
-            console.log(numSuggestions);
             if ($scope.currentGame.whoseTurn == "github") {
                 $scope.stats.numCurrentPlayers.github = numSuggestions;
             }

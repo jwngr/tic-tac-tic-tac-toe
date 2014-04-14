@@ -27,9 +27,9 @@ $blue: #A4D3EE;
 $green: #9CBC7F;
 $gray: #CCCCCC;
 
-/****************/
-/*  BACKGROUND  */
-/****************/
+/***************/
+/*  PAGE-WIDE  */
+/***************/
 body {
     /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
     background-image: url("../images/background.png");
@@ -353,12 +353,6 @@ h2 {
 #howToPlay {
     width: 520px;
     margin: 50px auto 10px auto;
-
-    h2 {
-        font-family: "Norwester";
-        margin-bottom: 20px;
-        text-align: center;
-    }
 
     p {
         font-family: "ClearSans";
