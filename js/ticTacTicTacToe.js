@@ -68,14 +68,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 text: "New game has started!",
                 type: "newGame"
             });
+            /*$firebase($scope.rootRef).$child("stats/events").$add({
+                imageUrl: "./images/ticTacTicTacToeLogo.png",
+                text: "New game has started!",
+                type: "newGame"
+            });*/
         };
-
-        // Populate the scoreboard
-        var statsRef = $firebase($scope.rootRef).$child("stats");
-        statsRef.$on("loaded", function(initialData) {
-            $scope.stats = initialData;
-            statsRef.$bind($scope, "stats");
-        });
 
         // Load the current MMO game
         var mmoGameRef = $firebase($scope.rootRef.child("/mmo/current/"));
@@ -94,8 +92,19 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             // If the current user is logged in, store them and setup the MMO game
             $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
                 if (loggedInUser) {
+                    // Store the user locally
                     $scope.loggedInUser = loggedInUser;
-                    $scope.setupMMOGame();
+                    console.log(loggedInUser);
+
+                    // Populate the scoreboard
+                    var statsRef = $firebase($scope.rootRef).$child("stats");
+                    statsRef.$on("loaded", function(initialData) {
+                        $scope.stats = initialData;
+                        statsRef.$bind($scope, "stats");
+
+                        // Set up the MMO game
+                        $scope.setupMMOGame();
+                    });
                 }
             });
         });
@@ -282,16 +291,24 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $scope.suggestMove = function(gridIndex, rowIndex, columnIndex) {
             // Make sure a game has started, the logged-in player's team is up, they have not guessed before, and the move is valid
             if ($scope.currentGame.hasStarted && $scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && !$scope.loggedInUser.suggestedMove && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
-                // Get the image and username of the logged-in player
-                var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
+                // Get the username, image URL, and user URL of the logged-in player
                 var username = $scope.loggedInUser.username;
+                var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
+                var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
 
                 // Create an event for the logged-in player's suggestion
                 $scope.stats.events.push({
                     imageUrl: imageUrl,
-                    text: username + " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                    userUrl: userUrl,
+                    text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                    username: username,
                     type: "suggestion"
                 });
+                /*$firebase($scope.rootRef).$child("stats/events").$add({
+                    imageUrl: imageUrl,
+                    text: username + " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                    type: "suggestion"
+                });*/
 
                 // Add the suggestion to Firebase
                 $scope.currentGame.suggestions[gridIndex][rowIndex][columnIndex] += 1;
@@ -330,9 +347,15 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             // Create an event for the current team's move
             $scope.stats.events.push({
                 imageUrl: imageUrl,
-                text: "Team " + team + " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                teamName: team,
+                text: " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
                 type: "move"
             });
+            /*$firebase($scope.rootRef).$child("stats/events").$add({
+                imageUrl: imageUrl,
+                text: "Team " + team + " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                type: "move"
+            });*/
 
             // Update the number of players for the current team
             var numSuggestions = $scope.getNumSuggestions();
@@ -369,9 +392,15 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 var team = (uberGridWinner == "github") ? "GitHub" : "Twitter";
                 $scope.stats.events.push({
                     imageUrl: "./images/ticTacTicTacToeLogo.png",
-                    text: "Team " + team + " won!",
+                    teamName: team,
+                    text: " won!",
                     type: "gameOver"
                 });
+                /*$firebase($scope.rootRef).$child("stats/events").$add({
+                    imageUrl: "./images/ticTacTicTacToeLogo.png",
+                    text: "Team " + team + " won!",
+                    type: "gameOver"
+                });*/
 
                 // Specify who won the game in Firebase
                 $scope.currentGame.winner = uberGridWinner;

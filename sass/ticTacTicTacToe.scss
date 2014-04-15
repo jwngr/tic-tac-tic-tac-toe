@@ -25,6 +25,7 @@
 $orange: #FF9955;
 $blue: #A4D3EE;
 $green: #9CBC7F;
+$red: #E04006;
 $gray: #CCCCCC;
 
 /***************/
@@ -148,9 +149,6 @@ h2 {
             border: solid 1px black;
             width: 50px;
             height: 50px;
-            /*font-family: "Norwester";
-            font-size: 50px;
-            line-height: 55px;*/
 
             &:first-of-type {
                 border-left: none;
@@ -274,6 +272,20 @@ h2 {
                 background: $orange;
             }
 
+            .username {
+                color: darken($blue, 50%);
+                text-decoration: none;
+                font-family: "ClearSansBold";
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+
+            .teamName {
+                font-family: "ClearSansBold";
+            }
+
             img {
                 float: left;
                 width: 40px;
@@ -342,6 +354,7 @@ h2 {
         & > p {
             font-family: "Norwester";
             font-size: 30px;
+            color: $red;
             margin: 3px 0 0 0;
         }
     }

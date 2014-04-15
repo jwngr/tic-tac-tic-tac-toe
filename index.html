@@ -112,7 +112,15 @@
                         <div class="event" ng-class="event.type">
                             <img ng-src="{{ event.imageUrl }}" />
                             <div class="textWrapper">
-                                <p>{{ event.text }}</p>
+                                <p ng-show="event.type == 'suggestion'">
+                                    <a class="username" ng-href="{{ event.userUrl }}" target="_blank">@{{ event.username }}</a>
+                                    <span>{{ event.text }}</span>
+                                </p>
+                                <p ng-show="event.type == 'move' || event.type == 'gameOver'">
+                                    <span class="teamName">Team {{ event.teamName }}</span>
+                                    <span>{{ event.text }}</span>
+                                </p>
+                                <p ng-show="event.type == 'newGame'">{{ event.text }}</p>
                             </div>
                             <div style="clear: both;"></div>
                         </div>
