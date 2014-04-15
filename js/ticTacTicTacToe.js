@@ -75,6 +75,26 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             });*/
         };
 
+        // Keep track of the number of GitHub users
+        $scope.numGitHubUsers = 0;
+        var gitHubUsersRef = $firebase($scope.rootRef).$child("loggedInUsers/github");
+        gitHubUsersRef.$on("child_added", function(dataSnapshot) {
+            $scope.numGitHubUsers += 1;
+        });
+        gitHubUsersRef.$on("child_removed", function(dataSnapshot) {
+            $scope.numGitHubUsers -= 1;
+        });
+
+        // Keep track of the number of Twitter users
+        $scope.numTwitterUsers = 0;
+        var twitterUsersRef = $firebase($scope.rootRef).$child("loggedInUsers/twitter");
+        twitterUsersRef.$on("child_added", function(dataSnapshot) {
+            $scope.numTwitterUsers += 1;
+        });
+        twitterUsersRef.$on("child_removed", function(dataSnapshot) {
+            $scope.numTwitterUsers -= 1;
+        });
+
         // Load the current MMO game
         var mmoGameRef = $firebase($scope.rootRef.child("/mmo/current/"));
         mmoGameRef.$on("loaded", function(initialData) {
@@ -92,25 +112,16 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             // If the current user is logged in, store them and setup the MMO game
             $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
                 if (loggedInUser) {
-                    // Store the user locally
-                    $scope.loggedInUser = loggedInUser;
-                    console.log(loggedInUser);
-
-                    // Populate the scoreboard
-                    var statsRef = $firebase($scope.rootRef).$child("stats");
-                    statsRef.$on("loaded", function(initialData) {
-                        $scope.stats = initialData;
-                        statsRef.$bind($scope, "stats");
-
-                        // Set up the MMO game
-                        $scope.setupMMOGame();
-                    });
+                    $scope.setupMMOGame(loggedInUser);
                 }
             });
         });
 
         /* Logs the logged-in user out */
         $scope.logoutUser = function() {
+            // Remove the user from their team's logged-in users node
+            $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid).remove();
+
             // Log the user out of Firebase
             $scope.loginObj.$logout();
 
@@ -143,32 +154,48 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $scope.joinMMOGame = function(provider) {
             $scope.loginObj.$login(provider).then(
                 function(loggedInUser) {
-                    // Store the user globally
-                    $scope.loggedInUser = loggedInUser;
-
-                    // Set up the MMO game
-                    $scope.setupMMOGame();
+                    $scope.setupMMOGame(loggedInUser);
             }, function(error) {
                console.error("Login failed: ", error);
             });
         };
 
         /* Sets up the current MMO game so that the logged-in user can join it */
-        $scope.setupMMOGame = function() {
-            // If there is no active MMO, start a new one and make the logged-in user host
-            if (!$scope.currentGame.hasStarted) {
-                // Reset the current MMO game
-                $scope.resetCurrentMMOGame();
+        $scope.setupMMOGame = function(loggedInUser) {
+            // Store the user locally
+            $scope.loggedInUser = loggedInUser;
+            console.log(loggedInUser);
 
-                // Set this player as the host
-                $scope.isMMOHost = true;
-            }
+            // Add the user to their team's logged-in users node in Firebase and set up to remove them from it when they get disconnected
+            $scope.rootRef.child(".info/connected").on("value", function(dataSnapshot) {
+                if (dataSnapshot.val() === true) {
+                    var teamLoggedInUsersRef = $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid);
+                    teamLoggedInUsersRef.onDisconnect().remove();
+                    $firebase(teamLoggedInUsersRef).$set(true);
+                }
+            });
 
-            // Update the game message text
-            $scope.setMMOGameMessage();
+            // Populate the scoreboard
+            var statsRef = $firebase($scope.rootRef).$child("stats");
+            statsRef.$on("loaded", function(initialData) {
+                $scope.stats = initialData;
+                statsRef.$bind($scope, "stats");
 
-            // Update the timer every second
-            $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+                // If there is no active MMO, start a new one and make the logged-in user host
+                if (!$scope.currentGame.hasStarted) {
+                    // Reset the current MMO game
+                    $scope.resetCurrentMMOGame();
+
+                    // Set this player as the host
+                    $scope.isMMOHost = true;
+                }
+
+                // Update the game message text
+                $scope.setMMOGameMessage();
+
+                // Update the timer every second
+                $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+            });
         };
 
         /* Updates the timer (if the logged-in user is the host) and the game message text */
@@ -356,15 +383,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 text: "Team " + team + " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
                 type: "move"
             });*/
-
-            // Update the number of players for the current team
-            var numSuggestions = $scope.getNumSuggestions();
-            if ($scope.currentGame.whoseTurn == "github") {
-                $scope.stats.numCurrentPlayers.github = numSuggestions;
-            }
-            else {
-                $scope.stats.numCurrentPlayers.twitter = numSuggestions;
-            }
 
             // Update whose turn it is
             $scope.currentGame.whoseTurn = ($scope.currentGame.whoseTurn == "github") ? "twitter" : "github";
