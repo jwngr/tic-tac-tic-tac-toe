@@ -85,7 +85,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     }
 
                     // Initialize the timer and update it every second
-                    $scope.numSecondsUntilNextMove = $scope.getNumSecondsUntilNextMove();
+                    $scope.numSecondsUntilNextMove = $scope.setupTimer();
                 });
             });
         });
@@ -421,8 +421,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             return new Date().getTime() + $scope.serverTimeOffset + (numSecondsUntilNextMove * 1000);
         };
 
-        /* Returns the number of seconds until the next move will be made */
-        $scope.getNumSecondsUntilNextMove = function() {
+        /* Sets up the timer which indicates the number of seconds until the next move will be made */
+        $scope.setupTimer = function() {
             // Get the number of second until the next move
             var decimalNumSecondsUntilNextMove = ($scope.currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000;
 
@@ -438,6 +438,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 }
             }
 
+            // Update the timer every second
             $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
 
             // Return the number of seconds until the next move
