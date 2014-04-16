@@ -7,6 +7,12 @@ app.filter("reverse", function() {
     };
 });
 
+app.filter("replaceZeroWithEmptyString", function() {
+    return function(value) {
+        return value ? value : "";
+    };
+});
+
 app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSimpleLogin", "$timeout",
     function($scope, $firebase, $firebaseSimpleLogin, $timeout) {
         // Get a reference to the root of the Firebase
@@ -33,7 +39,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         // Reset the logged-in user's guess every time the grids are updated
         $firebase($scope.rootRef.child("currentGame/grids")).$on("change", function(dataSnapshot) {
             if ($scope.loggedInUser) {
-                $scope.loggedInUser.suggestedMove = null;
+                $scope.loggedInUser.currentSuggestion = null;
             }
         });
 
@@ -78,9 +84,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         // Create a 3-way binding with the scoreboard wins
         $firebase($scope.rootRef).$child("wins").$bind($scope, "wins");
 
-        // Create a 3-way binding with the move suggestions
-        $firebase($scope.rootRef.child("suggestions")).$bind($scope, "suggestions");
-
 
         /********************/
         /*  LOGIN / LOGOUT  */
@@ -111,9 +114,14 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 // Log the user out of Firebase
                 $scope.loginObj.$logout();
 
-                // Clear the local logged-in user and the game message
+                // Clear the local logged-in user, the game message, and the move suggestions
                 $scope.loggedInUser = null;
-                $scope.gameMessage = "";
+                $scope.gameMessage = null;
+                $scope.suggestions = null;
+
+                // Turn off any Firebase event listeners
+                $scope.rootRef.child("suggestions").off();
+                $scope.rootRef.child(".info/connected").off();
 
                 // Clear the update time interval
                 if ($scope.isHost) {
@@ -154,14 +162,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     [ "", "", "" ],
                     [ "", "", "" ]
                 ],
-                //suggestions: $scope.getEmptyGrid(0),
                 previousMove: false,
                 validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
                 numSecondsUntilNextMove: 5
             };
 
             // Initialize the suggestions grid
-            $scope.suggestions = $scope.getEmptyGrid("");
+            $scope.suggestions = $scope.getEmptyGrid(0);
 
             // Create a new game event
             /*$firebase($scope.rootRef).$child("events").$add({
@@ -194,6 +201,24 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 }
             });
 
+            // Keep track of the move suggestions
+            $scope.suggestions = $scope.getEmptyGrid(0);
+            $scope.rootRef.child("suggestions").on("child_added", function(childSnapshot) {
+                var suggestion = childSnapshot.val();
+
+                // Add the user's first suggestion to the suggestions grid
+                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+            });
+            $scope.rootRef.child("suggestions/").on("child_changed", function(childSnapshot) {
+                var suggestion = childSnapshot.val();
+
+                // Remove the user's previous suggestion from the suggestions grid
+                $scope.suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][suggestion.previousSuggestion.columnIndex] -= 1;
+
+                // Add the user's current suggestion to the suggestions grid
+                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+            });
+
             // If the current game does not have a host, reset the game and make the logged-in user host
             if (!$scope.currentGame.hasHost) {
                 // Reset the current game
@@ -210,7 +235,9 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             else {
                 $firebase($scope.rootRef.child("currentGame/numSecondsUntilNextMove")).$on("value", function(dataSnapshot) {
                     $timeout(function() {
-                        $scope.setGameMessage();
+                        if ($scope.loggedInUser) {
+                            $scope.setGameMessage();
+                        }
                     });
                 });
             }
@@ -225,37 +252,38 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /***********************/
         /* Adds a suggestion from the logged-in users for his team's move */
         $scope.suggestMove = function(gridIndex, rowIndex, columnIndex) {
-            // Make sure a game has started, the logged-in user's team is up, the logged-in user has not guessed before, and the move is valid
-            if ($scope.currentGame && $scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && !$scope.loggedInUser.suggestedMove && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
-                // TODO: allow them to guess as much as they want
-                // Save the logged-in users's suggested guess so they cannot guess again until the next round
-                $scope.loggedInUser.suggestedMove = {
-                    gridIndex: gridIndex,
-                    rowIndex: rowIndex,
-                    columnIndex: columnIndex
-                };
+            // Make sure a game has started, the logged-in user's team is up, and the move is valid
+            if ($scope.currentGame && $scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
+                // Ignore the suggesetion if it hasn't changed
+                if (!$scope.loggedInUser.currentSuggestion || $scope.loggedInUser.currentSuggestion.gridIndex != gridIndex || $scope.loggedInUser.currentSuggestion.rowIndex != rowIndex || $scope.loggedInUser.currentSuggestion.columnIndex != columnIndex) {
+                    // Get the username, image URL, and user URL of the logged-in user
+                    var username = $scope.loggedInUser.username;
+                    var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
+                    var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
 
-                // Get the username, image URL, and user URL of the logged-in user
-                var username = $scope.loggedInUser.username;
-                var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
-                var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
+                    // Create an event for the logged-in user's suggestion
+                    /*$firebase($scope.rootRef).$child("events").$add({
+                        imageUrl: imageUrl,
+                        userUrl: userUrl,
+                        text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
+                        username: username,
+                        type: "suggestion"
+                    });*/
 
-                // Create an event for the logged-in user's suggestion
-                /*$firebase($scope.rootRef).$child("events").$add({
-                    imageUrl: imageUrl,
-                    userUrl: userUrl,
-                    text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
-                    username: username,
-                    type: "suggestion"
-                });*/
+                    // Add the suggestion to the move suggestions
+                    $scope.rootRef.child("suggestions/" + $scope.loggedInUser.uid).set({
+                        gridIndex: gridIndex,
+                        rowIndex: rowIndex,
+                        columnIndex: columnIndex,
+                        previousSuggestion: $scope.loggedInUser.currentSuggestion
+                    });
 
-                // Add the suggestion to the suggestions grid
-                var numCurrentSuggestions = $scope.suggestions[gridIndex][rowIndex][columnIndex];
-                if (numCurrentSuggestions) {
-                    $scope.suggestions[gridIndex][rowIndex][columnIndex] += 1;
-                }
-                else {
-                    $scope.suggestions[gridIndex][rowIndex][columnIndex] = 1;
+                    // Save the logged-in users's current suggestion
+                    $scope.loggedInUser.currentSuggestion = {
+                        gridIndex: gridIndex,
+                        rowIndex: rowIndex,
+                        columnIndex: columnIndex
+                    };
                 }
             }
         };
@@ -283,7 +311,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 for (var i = 0; i < 9; ++i) {
                     for (var j = 0; j < 3; ++j) {
                         for (var k = 0; k < 3; ++k) {
-                            var numTimesSuggested = $scope.suggestions[i][j][k] ? $scope.suggestions[i][j][k] : 0;
+                            var numTimesSuggested = $scope.suggestions[i][j][k];
                             if (numTimesSuggested > maxSuggestion.numTimesSuggested || (numTimesSuggested == maxSuggestion.numTimesSuggested && Math.random() > 0.5)) {
                                 maxSuggestion = {
                                     gridIndex: i,
@@ -329,7 +357,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             };
 
             // Clear the move suggestions
-            $scope.suggestions = $scope.getEmptyGrid("");
+            $scope.suggestions = $scope.getEmptyGrid(0);
+            $scope.rootRef.child("suggestions").remove();
 
             // Update the uber grid if the current grid was won
             $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3] = $scope.getGridWinner($scope.currentGame.grids[gridIndex]);
@@ -450,7 +479,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             for (var i = 0; i < 9; ++i) {
                 for (var j = 0; j < 3; ++j) {
                     for (var k = 0; k < 3; ++k) {
-                        numSuggestions += $scope.suggestions[i][j][k] ? $scope.suggestions[i][j][k] : 0;
+                        numSuggestions += $scope.suggestions[i][j][k];
                     }
                 }
             }
@@ -556,7 +585,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             if ($scope.currentGame && !$scope.currentGame.winner)
             {
                 if ($scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1) {
-                    if ($scope.loggedInUser.suggestedMove && $scope.loggedInUser.suggestedMove.gridIndex == gridIndex && $scope.loggedInUser.suggestedMove.rowIndex == rowIndex && $scope.loggedInUser.suggestedMove.columnIndex == columnIndex) {
+                    if ($scope.loggedInUser.currentSuggestion && $scope.loggedInUser.currentSuggestion.gridIndex == gridIndex && $scope.loggedInUser.currentSuggestion.rowIndex == rowIndex && $scope.loggedInUser.currentSuggestion.columnIndex == columnIndex) {
                         return "suggestedMove";
                     }
                     else {
@@ -581,11 +610,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             if ($scope.currentGame && $scope.currentGame.winner && $scope.currentGame.winner == $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3]){
                 return "winningTeam";
             }
-        };
-
-        /* Returns true if the cell specified by the inputted indices has any suggestions */
-        $scope.hasSuggestions = function(gridIndex, rowIndex, columnIndex) {
-            return ($scope.suggestions && $scope.suggestions[gridIndex][rowIndex][columnIndex]);
         };
     }
 ]);

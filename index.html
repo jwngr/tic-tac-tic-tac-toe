@@ -56,7 +56,7 @@
                     <!-- Small tic-tac-toe grid -->
                     <div class="row" ng-repeat="row in grid" ng-hide="getGridWinner(grid)">
                         <div class="cell" ng-class="getCellClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="suggestMove($parent.$parent.$index, $parent.$index, $index)">
-                            <p ng-show="cell == ''">{{ suggestions[$parent.$parent.$index][$parent.$index][$index] }}</p>
+                            <p ng-show="cell == ''">{{ suggestions[$parent.$parent.$index][$parent.$index][$index] | replaceZeroWithEmptyString }}</p>
                             <img src="./images/gitHubLogo.png" ng-show="cell == 'github'" />
                             <img src="./images/twitterLogo.png" ng-show="cell == 'twitter'" />
                         </div>
