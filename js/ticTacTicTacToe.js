@@ -116,7 +116,9 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 $scope.gameMessage = "";
 
                 // Clear the update time interval
-                window.clearInterval($scope.updateTimerInterval);
+                if ($scope.isHost) {
+                    window.clearInterval($scope.updateTimerInterval);
+                }
             });
         };
 
@@ -199,13 +201,22 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Set the logged-in user as host
                 $scope.isHost = true;
+
+                // Update the timer every second
+                $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+            }
+
+            // Otherwise, update the game message every time the timer changes
+            else {
+                $firebase($scope.rootRef.child("currentGame/numSecondsUntilNextMove")).$on("value", function(dataSnapshot) {
+                    $timeout(function() {
+                        $scope.setGameMessage();
+                    });
+                });
             }
 
             // Update the game message text
             $scope.setGameMessage();
-
-            // Update the timer every second
-            $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
         };
 
 
@@ -357,26 +368,24 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /* Updates the timer (if the logged-in user is the host) and the game message text */
         $scope.updateTimer = function() {
             $timeout(function() {
-                if ($scope.isHost) {
-                    // Decrement the timer if the logged-in user is the host
-                    $scope.currentGame.numSecondsUntilNextMove -= 1;
+                // Decrement the timer if the logged-in user is the host
+                $scope.currentGame.numSecondsUntilNextMove -= 1;
 
-                    if ($scope.currentGame.numSecondsUntilNextMove == 0) {
-                        // If there is not a winner, reset the timer and make a move for the current team
-                        if (!$scope.currentGame.winner) {
-                            $scope.currentGame.numSecondsUntilNextMove = 5;
-                            $scope.makeMove();
-                        }
-                        // Otherwise, reset the game since it has been won
-                        else {
-                            $scope.resetCurrentGame();
-                        }
+                if ($scope.currentGame.numSecondsUntilNextMove == 0) {
+                    // If there is not a winner, reset the timer and make a move for the current team
+                    if (!$scope.currentGame.winner) {
+                        $scope.currentGame.numSecondsUntilNextMove = 5;
+                        $scope.makeMove();
                     }
-                }
+                    // Otherwise, reset the game since it has been won
+                    else {
+                        $scope.resetCurrentGame();
+                    }
 
-                // Set the game message if the user is logged in
-                if ($scope.loggedInUser) {
-                    $scope.setGameMessage();
+                    // Set the game message if the user is logged in
+                    if ($scope.loggedInUser) {
+                        $scope.setGameMessage();
+                    }
                 }
             });
         };
