@@ -1,0 +1,43 @@
+{
+  "rules": {
+    ".read": true,
+
+    "currentGame": {
+      ".write": "auth != null && auth.uid == 'github:4149793'"
+    },
+
+    "events": {
+      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('mmo').child('current').child('whoseTurn').val() == auth.provider)",
+      "$event": {
+        ".validate": "newData.hasChildren(['imageUrl', 'text', 'type'])"
+      }
+    },
+
+    "history": {
+      ".write": "auth != null && auth.uid == 'github:4149793'"
+    },
+
+    "loggedInUsers": {
+      //".read": "auth != null && auth.uid == 'github:4149793'",
+      ".write": "auth != null",
+
+      "$provider": {
+        "$uid": {
+          ".validate": "auth.provider == $provider && auth.uid == $uid"
+        }
+      }
+    },
+
+    "suggestions": {
+      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('mmo').child('current').child('whoseTurn').val() == auth.provider)"
+    },
+
+    "wins": {
+      ".write": "auth != null && auth.uid == 'github:4149793' && newData.hasChildren(['github', 'twitter'])",
+
+      "$provider": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    }
+  }
+}

@@ -33,11 +33,11 @@
 
         <!-- Login buttons -->
         <div id="loginButtons" ng-hide="loggedInUser">
-            <div id="gitHubLoginButton" ng-click="joinMMOGame('github')">
+            <div id="gitHubLoginButton" ng-click="joinGame('github')">
                 <img src="./images/gitHubLogo.png" />
                 <p>Join Team GitHub</p>
             </div>
-            <div id="twitterLoginButton" ng-click="joinMMOGame('twitter')">
+            <div id="twitterLoginButton" ng-click="joinGame('twitter')">
                 <img src="./images/twitterLogo.png" />
                 <p>Join Team Twitter</p>
             </div>
@@ -56,6 +56,7 @@
                     <!-- Small tic-tac-toe grid -->
                     <div class="row" ng-repeat="row in grid" ng-hide="getGridWinner(grid)">
                         <div class="cell" ng-class="getCellClass($parent.$parent.$index, $parent.$index, $index)" ng-repeat="cell in row track by $index" ng-click="suggestMove($parent.$parent.$index, $parent.$index, $index)">
+                            <p ng-show="cell == ''">{{ suggestions[$parent.$parent.$index][$parent.$index][$index] }}</p>
                             <img src="./images/gitHubLogo.png" ng-show="cell == 'github'" />
                             <img src="./images/twitterLogo.png" ng-show="cell == 'twitter'" />
                         </div>
@@ -80,13 +81,13 @@
                 <!-- Scoreboard -->
                 <p class="statsSectionTitle">Wins</p>
                 <div id="scoreboard">
-                    <div class="teamContainer">
+                    <div class="teamContainer" ng-class="getTeamContainerClass('github')">
                         <img src="./images/gitHubLogo.png" />
-                        <p>{{ stats.wins.github }}</p>
+                        <p>{{ wins.github }}</p>
                     </div>
                     <div class="divider"></div>
-                    <div class="teamContainer">
-                        <p>{{ stats.wins.twitter }}</p>
+                    <div class="teamContainer" ng-class="getTeamContainerClass('twitter')">
+                        <p>{{ wins.twitter }}</p>
                         <img src="./images/twitterLogo.png" />
                     </div>
                 </div>
@@ -94,21 +95,21 @@
                 <!-- Number of players -->
                 <p class="statsSectionTitle">Team Size</p>
                 <div id="numCurrentPlayers">
-                    <div class="teamContainer">
+                    <div class="teamContainer" ng-class="getTeamContainerClass('github')">
                         <img src="./images/gitHubLogo.png" />
                         <p>{{ numGitHubUsers }}</p>
                     </div>
                     <div class="divider"></div>
-                    <div class="teamContainer">
+                    <div class="teamContainer" ng-class="getTeamContainerClass('twitter')">
                         <p>{{ numTwitterUsers }}</p>
                         <img src="./images/twitterLogo.png" />
                     </div>
                 </div>
 
                 <!-- Play by play ticker -->
-                <p class="statsSectionTitle">Play By Play</p>
+                <!--<p class="statsSectionTitle">Play By Play</p>
                 <div id="playByPlayTicker">
-                    <div id="event" ng-repeat="event in stats.events | reverse">
+                    <div id="event" ng-repeat="event in events | reverse">
                         <div class="event" ng-class="event.type">
                             <img ng-src="{{ event.imageUrl }}" />
                             <div class="textWrapper">
@@ -125,7 +126,7 @@
                             <div style="clear: both;"></div>
                         </div>
                     </div>
-                </div>
+                </div>-->
             </div>
 
             <div style="clear: both;"></div>
@@ -138,7 +139,7 @@
             <p>Win the big tic-tac-toe board by getting <span class="bold">three in a row</span> - either across, down, or diagonally - or getting a <span class="bold">majority of the squares in a full grid</span>. In order to earn one of the nine squares in the big board, you must win the smaller tic-tac-toe board contained within it.</p>
             <p><span class="bold">Your opponent's previous move determines which board(s) you are allowed to play in</span>. For example, if your opponent chose the top right square of the center board, you would then have to choose an open square in the top right board.</p>
             <p>If your opponent's previous move would force you to play in a board which has already been won, you can select any open square on the whole board.</p>
-            <p>The most recent move is shown in <span id="blue">blue</span>, your possible moves are shown in <span id="green">green</span>, and the move you suggested for your team is shown in <span id="orange">orange</span>.</p>
+            <p>The most recent move is shown in <span id="blue">blue</span>, your possible moves are shown in <span id="green">green</span>, and the move you suggested for your team is shown in <span id="orange">orange</span>. The numbers in individual squares represent how many people have voted for those squares.</p>
         </div>
 
         <!-- Firebase badge -->
