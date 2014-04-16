@@ -263,6 +263,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                         userUrl: userUrl,
                         text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
                         username: username,
+                        uid: $scope.loggedInUser.uid,
                         type: "suggestion"
                     });
 

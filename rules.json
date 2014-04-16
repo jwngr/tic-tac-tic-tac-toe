@@ -8,8 +8,9 @@
 
     "events": {
       ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)",
+
       "$event": {
-        ".validate": "newData.hasChildren(['imageUrl', 'text', 'type'])"
+        ".validate": "(auth.uid == 'github:4149793' || (newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion')) && newData.hasChildren(['imageUrl', 'text', 'type'])"
       }
     },
 
@@ -29,7 +30,11 @@
     },
 
     "suggestions": {
-      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)"
+      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)",
+
+      "$uid": {
+        ".validate": "auth.uid == $uid && newData.hasChildren(['gridIndex', 'rowIndex', 'columnIndex'])"
+      }
     },
 
     "wins": {
