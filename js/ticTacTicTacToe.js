@@ -218,6 +218,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 // Add the user's current suggestion to the suggestions grid
                 $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
             });
+            $scope.rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
+                var suggestion = childSnapshot.val();
+                console.log(suggestion);
+
+                // Remove the user's suggestion from the suggestions grid
+                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
+            });
 
             // If the current game does not have a host, reset the game and make the logged-in user host
             if (!$scope.currentGame.hasHost) {
@@ -357,7 +364,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             };
 
             // Clear the move suggestions
-            $scope.suggestions = $scope.getEmptyGrid(0);
             $scope.rootRef.child("suggestions").remove();
 
             // Update the uber grid if the current grid was won
@@ -380,6 +386,9 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Specify who won the game
                 $scope.currentGame.winner = uberGridWinner;
+
+                // Wait ten seconds until the next game starts
+                $scope.currentGame.numSecondsUntilNextMove = 10;
 
                 // Increment the number of teams wins
                 if (uberGridWinner == "github") {
