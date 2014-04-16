@@ -78,6 +78,9 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         // Create a 3-way binding with the scoreboard wins
         $firebase($scope.rootRef).$child("wins").$bind($scope, "wins");
 
+        // Create a 3-way binding with the move suggestions
+        $firebase($scope.rootRef.child("suggestions")).$bind($scope, "suggestions");
+
 
         /********************/
         /*  LOGIN / LOGOUT  */
@@ -188,9 +191,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     }
                 }
             });
-
-            // Create a 3-way binding with the move suggestions
-            $firebase($scope.rootRef.child("suggestions")).$bind($scope, "suggestions");
 
             // If the current game does not have a host, reset the game and make the logged-in user host
             if (!$scope.currentGame.hasHost) {

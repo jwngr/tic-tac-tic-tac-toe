@@ -144,6 +144,14 @@ h2 {
         float: left;
         margin-right: 25px;
 
+        /* Disable highlighting */
+        ::-moz-selection{
+            background-color: transparent;
+        }
+        ::selection {
+            background-color: transparent;
+        }
+
         .cell {
             display: inline;
             float: left;
