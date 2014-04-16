@@ -1,12 +1,31 @@
 var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 
 /* Returns a list of items in reverse order */
-app.filter("reverse", function() {
+app.filter('reverse', function() {
+    /* Converts a Firebase list to a JS array */
+    function toArray(list) {
+        var k, out = [];
+        if (list) {
+            if (angular.isArray(list)) {
+                out = list;
+            }
+            else if (typeof(list) === "object") {
+                for (k in list) {
+                    if (list.hasOwnProperty(k)) {
+                        out.push(list[k]);
+                    }
+                }
+            }
+        }
+        return out;
+    };
+
     return function(items) {
-        return items ? items.slice().reverse() : [];
+        return toArray(items).slice().reverse();
     };
 });
 
+/* Returns the empty string if the input is 0; otherwise, returns the input */
 app.filter("replaceZeroWithEmptyString", function() {
     return function(value) {
         return value ? value : "";
@@ -22,45 +41,15 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $scope.loginObj = $firebaseSimpleLogin($scope.rootRef);
 
 
-        /********************************/
-        /*  TODO: move these functions  */
-        /********************************/
-        // Keep track of the last certain number of game events in a list
-        /*$scope.events = [];
-        $scope.rootRef.child("events").limit(100).on("child_added", function(newChildSnapshot) {
-            var numEventsToKeep = 100;
-            $scope.events.push(newChildSnapshot.val());
-            if ($scope.events.length > numEventsToKeep) {
-                $scope.events.splice(numEventsToKeep, 1);
-            }
-        });*/
-
-        // TODO: move somewhere more logical?
-        // Reset the logged-in user's guess every time the grids are updated
-        $firebase($scope.rootRef.child("currentGame/grids")).$on("change", function(dataSnapshot) {
-            if ($scope.loggedInUser) {
-                $scope.loggedInUser.currentSuggestion = null;
-            }
-        });
-
-        // TODO: uncomment or delete
-        /*currentGameRef.$child("grids").$on("change", function(newData) {
-            console.log($scope.currentGame)
-            var imageUrl = ($scope.currentGame.whoseTurn == "github") ? "./images/twitterLogo.png" : "./images/gitHubLogo.png";
-            var team = ($scope.currentGame.whoseTurn == "github") ? "Twitter" : "GitHub";
-
-            $scope.events.push({
-                imageUrl: imageUrl,
-                teamName: team,
-                text: " played [" + $scope.currentGame.previousMove.gridIndex + "," + $scope.currentGame.previousMove.rowIndex + "," + $scope.currentGame.previousMove.columnIndex + "]",
-                type: "move"
-            });
-        });*/
-
-
         /***************/
         /*  STATS HUB  */
         /***************/
+        // Create a 3-way binding to the play by play events, limiting how many we keep at a time
+        $firebase($scope.rootRef.child("events").limit(100)).$bind($scope, "events").then();
+
+        // Create a 3-way binding with the scoreboard wins
+        $firebase($scope.rootRef).$child("wins").$bind($scope, "wins");
+
         // Keep track of the number of GitHub users
         $scope.numGitHubUsers = 0;
         var gitHubUsersRef = $firebase($scope.rootRef.child("loggedInUsers/github"));
@@ -80,9 +69,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         twitterUsersRef.$on("child_removed", function(dataSnapshot) {
             $scope.numTwitterUsers -= 1;
         });
-
-        // Create a 3-way binding with the scoreboard wins
-        $firebase($scope.rootRef).$child("wins").$bind($scope, "wins");
 
 
         /********************/
@@ -171,18 +157,18 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             $scope.suggestions = $scope.getEmptyGrid(0);
 
             // Create a new game event
-            /*$firebase($scope.rootRef).$child("events").$add({
+            //$firebase($scope.rootRef).$child("events").$add({
+            $scope.events.$add({
                 imageUrl: "./images/ticTacTicTacToeLogo.png",
                 text: "A new game has started!",
                 type: "newGame"
-            });*/
+            });
         };
 
         /* Sets up the current game (making a new one if needed) */
         $scope.setupGame = function(loggedInUser) {
             // Store the logged-in user locally
             $scope.loggedInUser = loggedInUser;
-            console.log(loggedInUser); // TODO: remove
 
             // Keep track of when the logged-in user in connected or disconnected from Firebase
             $scope.rootRef.child(".info/connected").on("value", function(dataSnapshot) {
@@ -220,10 +206,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             });
             $scope.rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
                 var suggestion = childSnapshot.val();
-                console.log(suggestion);
 
                 // Remove the user's suggestion from the suggestions grid
                 $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
+
+                // Reset the logged-in user's current suggestion
+                $scope.loggedInUser.currentSuggestion = null;
             });
 
             // If the current game does not have a host, reset the game and make the logged-in user host
@@ -269,20 +257,21 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
 
                     // Create an event for the logged-in user's suggestion
-                    /*$firebase($scope.rootRef).$child("events").$add({
+                    //$firebase($scope.rootRef).$child("events").$add({
+                    $scope.events.$add({
                         imageUrl: imageUrl,
                         userUrl: userUrl,
                         text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
                         username: username,
                         type: "suggestion"
-                    });*/
+                    });
 
                     // Add the suggestion to the move suggestions
                     $scope.rootRef.child("suggestions/" + $scope.loggedInUser.uid).set({
                         gridIndex: gridIndex,
                         rowIndex: rowIndex,
                         columnIndex: columnIndex,
-                        previousSuggestion: $scope.loggedInUser.currentSuggestion
+                        previousSuggestion: $scope.loggedInUser.currentSuggestion ? $scope.loggedInUser.currentSuggestion : false
                     });
 
                     // Save the logged-in users's current suggestion
@@ -346,12 +335,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             var team = ($scope.currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
 
             // Create an event for the move
-            /*$firebase($scope.rootRef).$child("events").$add({
+            //$firebase($scope.rootRef).$child("events").$add({
+            $scope.events.$add({
                 imageUrl: imageUrl,
                 teamName: team,
                 text: " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
                 type: "move"
-            });*/
+            });
 
             // Update whose turn it is
             $scope.currentGame.whoseTurn = ($scope.currentGame.whoseTurn == "github") ? "twitter" : "github";
@@ -377,12 +367,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             if (uberGridWinner) {
                 // Add a game over event to the play by play ticker
                 var team = (uberGridWinner == "github") ? "GitHub" : "Twitter";
-                /*$firebase($scope.rootRef).$child("events").$add({
+                //$firebase($scope.rootRef).$child("events").$add({
+                $scope.events.$add({
                     imageUrl: "./images/ticTacTicTacToeLogo.png",
                     teamName: team,
                     text: " won!",
                     type: "gameOver"
-                });*/
+                });
 
                 // Specify who won the game
                 $scope.currentGame.winner = uberGridWinner;
