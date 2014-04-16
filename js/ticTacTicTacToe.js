@@ -74,13 +74,20 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /********************/
         /*  LOGIN / LOGOUT  */
         /********************/
-        // Create a 3-way binding with the current game
-        $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function(unbind) {
-            // If the current user is logged in, setup the current game
-            $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
-                if (loggedInUser) {
-                    $scope.setupGame(loggedInUser);
-                }
+        // Get the time offset between this client and the Firebase server and set the local timer
+        $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset").then(function() {
+            // Create a 3-way binding with the current game
+            $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function(unbind) {
+                // If the current user is logged in, setup the current game
+                $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
+                    if (loggedInUser) {
+                        $scope.setupGame(loggedInUser);
+                    }
+
+                    // Initialize the timer and update it every second
+                    $scope.numSecondsUntilNextMove = $scope.getNumSecondsUntilNextMove();
+                    $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+                });
             });
         });
 
@@ -222,10 +229,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 // Set the logged-in user as host
                 $scope.isHost = true;
             }
-
-            // Initialize the local timer and update it every second
-            $scope.numSecondsUntilNextMove = $scope.getNumSecondsUntilNextMove();
-            $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
 
             // Update the game message text
             $scope.setGameMessage();
@@ -414,9 +417,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /***********/
         /*  TIMER  */
         /***********/
-        // Get the time offset between this client and the Firebase server
-        $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset");
-
         /* Returns the time at which the next move should be made */
         $scope.getTimeOfNextMove = function(numSecondsUntilNextMove) {
             return new Date().getTime() + $scope.serverTimeOffset + (numSecondsUntilNextMove * 1000);
@@ -424,7 +424,23 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
         /* Returns the number of seconds until the next move will be made */
         $scope.getNumSecondsUntilNextMove = function() {
-            return Math.round(($scope.currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
+            // Get the number of second until the next move
+            var decimalNumSecondsUntilNextMove = ($scope.currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000;
+
+            // Determine the difference in seconds between the local time and the Firebase clock
+            var numSecondsUntilNextMove = Math.floor(decimalNumSecondsUntilNextMove);
+            var difference = decimalNumSecondsUntilNextMove - numSecondsUntilNextMove;
+
+            // Sleep for the difference in clock time to sync up the clocks
+            var start = new Date().getTime();
+            for (var i = 0; i < 1e7; i++) {
+                if ((new Date().getTime() - start) > (difference * 1000)) {
+                    break;
+                }
+            }
+
+            // Return the number of seconds until the next move
+            return numSecondsUntilNextMove ? numSecondsUntilNextMove : 5;
         };
 
         /* Updates the timer (if the logged-in user is the host) and the game message text */
