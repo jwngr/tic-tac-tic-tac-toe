@@ -150,7 +150,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 ],
                 previousMove: false,
                 validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
-                numSecondsUntilNextMove: 5
+                timeOfNextMove: $scope.getTimeOfNextMove(5)
             };
 
             // Initialize the suggestions grid
@@ -221,21 +221,11 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Set the logged-in user as host
                 $scope.isHost = true;
-
-                // Update the timer every second
-                $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
             }
 
-            // Otherwise, update the game message every time the timer changes
-            else {
-                $firebase($scope.rootRef.child("currentGame/numSecondsUntilNextMove")).$on("value", function(dataSnapshot) {
-                    $timeout(function() {
-                        if ($scope.loggedInUser) {
-                            $scope.setGameMessage();
-                        }
-                    });
-                });
-            }
+            // Initialize the local timer and update it every second
+            $scope.numSecondsUntilNextMove = $scope.getNumSecondsUntilNextMove();
+            $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
 
             // Update the game message text
             $scope.setGameMessage();
@@ -380,7 +370,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 $scope.currentGame.winner = uberGridWinner;
 
                 // Wait ten seconds until the next game starts
-                $scope.currentGame.numSecondsUntilNextMove = 10;
+                $scope.numSecondsUntilNextMove = 10;
+                $scope.currentGame.timeOfNextMove = $scope.getTimeOfNextMove(10);
 
                 // Increment the number of teams wins
                 if (uberGridWinner == "github") {
@@ -393,31 +384,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 // Append the current game to the games history
                 $firebase($scope.rootRef.child("history")).$add($scope.currentGame);
             }
-        };
-
-        /* Updates the timer (if the logged-in user is the host) and the game message text */
-        $scope.updateTimer = function() {
-            $timeout(function() {
-                // Decrement the timer if the logged-in user is the host
-                $scope.currentGame.numSecondsUntilNextMove -= 1;
-
-                if ($scope.currentGame.numSecondsUntilNextMove == 0) {
-                    // If there is not a winner, reset the timer and make a move for the current team
-                    if (!$scope.currentGame.winner) {
-                        $scope.currentGame.numSecondsUntilNextMove = 5;
-                        $scope.makeMove();
-                    }
-                    // Otherwise, reset the game since it has been won
-                    else {
-                        $scope.resetCurrentGame();
-                    }
-
-                    // Set the game message if the user is logged in
-                    if ($scope.loggedInUser) {
-                        $scope.setGameMessage();
-                    }
-                }
-            });
         };
 
         /* Set the text of the game message */
@@ -443,6 +409,60 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 var winningTeam = ($scope.currentGame.winner == "github") ? "GitHub" : "Twitter";
                 $scope.gameMessage = "Team " + winningTeam + " wins! A new game will start soon.";
             }
+        };
+
+        /***********/
+        /*  TIMER  */
+        /***********/
+        // Get the time offset between this client and the Firebase server
+        $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset");
+
+        /* Returns the time at which the next move should be made */
+        $scope.getTimeOfNextMove = function(numSecondsUntilNextMove) {
+            return new Date().getTime() + $scope.serverTimeOffset + (numSecondsUntilNextMove * 1000);
+        };
+
+        /* Returns the number of seconds until the next move will be made */
+        $scope.getNumSecondsUntilNextMove = function() {
+            return Math.round(($scope.currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
+        };
+
+        /* Updates the timer (if the logged-in user is the host) and the game message text */
+        $scope.updateTimer = function() {
+            $timeout(function() {
+                // Decrement the number of second until the next move
+                $scope.numSecondsUntilNextMove -= 1;
+
+                // If the timer has hit zero, reset it and make a move for the current team
+                if ($scope.numSecondsUntilNextMove == 0)
+                {
+                    // Reset the local timer
+                    $scope.numSecondsUntilNextMove = 5;
+
+                    if ($scope.isHost) {
+                        // If there is not a winner, reset the timer in Firebase and make a move for the current team
+                        if (!$scope.currentGame.winner) {
+                            $scope.currentGame.timeOfNextMove = $scope.getTimeOfNextMove(5);
+                            $scope.makeMove();
+                        }
+                        // Otherwise, reset the game since it has been won
+                        else {
+                            $scope.resetCurrentGame();
+                        }
+                    }
+                    else {
+                        // If there is a winner and this is a non-host, reset the time and wait for a new game
+                        if ($scope.currentGame.winner) {
+                            $scope.numSecondsUntilNextMove = 10;
+                        }
+                    }
+
+                    // Set the game message if the user is logged in
+                    if ($scope.loggedInUser) {
+                        $scope.setGameMessage();
+                    }
+                }
+            });
         };
 
 
