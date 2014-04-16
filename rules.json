@@ -7,7 +7,7 @@
     },
 
     "events": {
-      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('mmo').child('current').child('whoseTurn').val() == auth.provider)",
+      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)",
       "$event": {
         ".validate": "newData.hasChildren(['imageUrl', 'text', 'type'])"
       }
@@ -29,7 +29,7 @@
     },
 
     "suggestions": {
-      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('mmo').child('current').child('whoseTurn').val() == auth.provider)"
+      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)"
     },
 
     "wins": {
