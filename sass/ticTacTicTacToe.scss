@@ -26,6 +26,7 @@ $orange: #FF9955;
 $blue: #A4D3EE;
 $green: #9CBC7F;
 $red: #E04006;
+$gold: #EEE899;
 $gray: #CCCCCC;
 
 /***************/
@@ -229,6 +230,10 @@ h2 {
                 width: 155px;
                 height: 155px;
 
+                &.winningTeam {
+                    background: $gold;
+                }
+
                 & > img {
                     width: 120px;
                     height: 120px;
@@ -348,7 +353,7 @@ h2 {
             }
 
             &.activeTeam {
-                background: $green;
+                background: $gold;
             }
         }
 

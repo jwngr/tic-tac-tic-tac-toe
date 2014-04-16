@@ -567,6 +567,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             }
         };
 
+        /* Returns the CSS class the current grid winner should have */
+        $scope.getGridWinnerClass = function(gridIndex) {
+            if ($scope.currentGame && $scope.currentGame.winner && $scope.currentGame.winner == $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3]){
+                return "winningTeam";
+            }
+        };
+
         /* Returns true if the cell specified by the inputted indices has any suggestions */
         $scope.hasSuggestions = function(gridIndex, rowIndex, columnIndex) {
             return ($scope.suggestions && $scope.suggestions[gridIndex][rowIndex][columnIndex]);

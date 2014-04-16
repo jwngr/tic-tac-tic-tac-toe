@@ -63,7 +63,7 @@
                     </div>
 
                     <!-- Grid winner -->
-                    <div class="gridWinner" ng-show="getGridWinner(grid)">
+                    <div class="gridWinner" ng-show="getGridWinner(grid)" ng-class="getGridWinnerClass($index)">
                         <img src="./images/gitHubLogo.png" ng-show="getGridWinner(grid) == 'github'" />
                         <img src="./images/twitterLogo.png" ng-show="getGridWinner(grid) == 'twitter'" />
                     </div>
