@@ -16,4 +16,5 @@ If your opponent's previous move would force you to play in a board which has al
 
 ##Inspiration
 - [Ten (iOS)](https://itunes.apple.com/us/app/ten/id669964112?mt=8) by Sennep
+- [Ultimate Tic-Tac-Toe](http://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/)
 - [Twitch Plays Pokemon](http://www.twitch.tv/twitchplayspokemon)
