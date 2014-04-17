@@ -48,7 +48,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $firebase($scope.rootRef.child("events").limit(100)).$bind($scope, "events").then();
 
         // Create a 3-way binding with the scoreboard wins
-        $firebase($scope.rootRef).$child("wins").$bind($scope, "wins");
+        $firebase($scope.rootRef.child("wins")).$bind($scope, "wins");
 
         // Keep track of the number of GitHub users
         $scope.numGitHubUsers = 0;
