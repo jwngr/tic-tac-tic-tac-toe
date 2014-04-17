@@ -83,9 +83,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     if (loggedInUser) {
                         $scope.setupGame(loggedInUser);
                     }
-
-                    // Initialize the timer and update it every second
-                    $scope.numSecondsUntilNextMove = $scope.setupTimer();
                 });
             });
         });
@@ -156,14 +153,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 ],
                 previousMove: false,
                 validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
-                timeOfNextMove: $scope.getTimeOfNextMove(5)
+                timeOfNextMove: $scope.generateTimeOfNextMove(5)
             };
 
             // Initialize the suggestions grid
             $scope.suggestions = $scope.getEmptyGrid(0);
 
             // Create a new game event
-            //$firebase($scope.rootRef).$child("events").$add({
             $scope.events.$add({
                 imageUrl: "./images/ticTacTicTacToeLogo.png",
                 text: "A new game has started!",
@@ -249,7 +245,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                     var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
 
                     // Create an event for the logged-in user's suggestion
-                    //$firebase($scope.rootRef).$child("events").$add({
                     $scope.events.$add({
                         imageUrl: imageUrl,
                         userUrl: userUrl,
@@ -328,7 +323,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             var team = ($scope.currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
 
             // Create an event for the move
-            //$firebase($scope.rootRef).$child("events").$add({
             $scope.events.$add({
                 imageUrl: imageUrl,
                 teamName: team,
@@ -360,7 +354,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             if (uberGridWinner) {
                 // Add a game over event to the play by play ticker
                 var team = (uberGridWinner == "github") ? "GitHub" : "Twitter";
-                //$firebase($scope.rootRef).$child("events").$add({
                 $scope.events.$add({
                     imageUrl: "./images/ticTacTicTacToeLogo.png",
                     teamName: team,
@@ -372,8 +365,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 $scope.currentGame.winner = uberGridWinner;
 
                 // Wait ten seconds until the next game starts
-                $scope.numSecondsUntilNextMove = 10;
-                $scope.currentGame.timeOfNextMove = $scope.getTimeOfNextMove(10);
+                $scope.currentGame.timeOfNextMove += 10000;
 
                 // Increment the number of teams wins
                 if (uberGridWinner == "github") {
@@ -385,6 +377,11 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Append the current game to the games history
                 $firebase($scope.rootRef.child("history")).$add($scope.currentGame);
+            }
+
+            // Otherwise, if there is no winner, set the next move to be made in five seconds
+            else {
+                $scope.currentGame.timeOfNextMove += 5000;
             }
         };
 
@@ -417,50 +414,40 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /*  TIMER  */
         /***********/
         /* Returns the time at which the next move should be made */
-        $scope.getTimeOfNextMove = function(numSecondsUntilNextMove) {
+        $scope.generateTimeOfNextMove = function(numSecondsUntilNextMove) {
             return new Date().getTime() + $scope.serverTimeOffset + (numSecondsUntilNextMove * 1000);
         };
 
-        /* Sets up the timer which indicates the number of seconds until the next move will be made */
-        $scope.setupTimer = function() {
-            // Get the number of second until the next move
-            var decimalNumSecondsUntilNextMove = ($scope.currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000;
+        /* Resets the timer every time the time for the next move is updated */
+        $scope.rootRef.child("currentGame/timeOfNextMove").on("value", function(dataSnapshot) {
+            // Get the time of the next move
+            var timeOfNextMove = dataSnapshot.val();
 
-            // Determine the difference in seconds between the local time and the Firebase clock
-            var numSecondsUntilNextMove = Math.floor(decimalNumSecondsUntilNextMove);
-            var difference = decimalNumSecondsUntilNextMove - numSecondsUntilNextMove;
+            // Clear the current update timer interval
+            window.clearInterval($scope.updateTimerInterval);
 
-            // Sleep for the difference in clock time to sync up the clocks
-            var start = new Date().getTime();
-            for (var i = 0; i < 1e7; i++) {
-                if ((new Date().getTime() - start) > (difference * 1000)) {
-                    break;
-                }
-            }
+            // Update the number of seconds until the next move
+            $scope.numSecondsUntilNextMove = Math.ceil((timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
 
             // Update the timer every second
             $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+        });
 
-            // Return the number of seconds until the next move
-            return numSecondsUntilNextMove ? numSecondsUntilNextMove : 5;
-        };
-
-        /* Updates the timer (if the logged-in user is the host) and the game message text */
+        /* Updates the timer and the game message text */
         $scope.updateTimer = function() {
             $timeout(function() {
-                // Decrement the number of second until the next move
+                // Decrement the number of seconds until the next move
                 $scope.numSecondsUntilNextMove -= 1;
 
                 // If the timer has hit zero, reset it and make a move for the current team
                 if ($scope.numSecondsUntilNextMove == 0)
                 {
-                    // Reset the local timer
-                    $scope.numSecondsUntilNextMove = 5;
+                    // Clear the current update timer interval
+                    window.clearInterval($scope.updateTimerInterval);
 
                     if ($scope.isHost) {
                         // If there is not a winner, reset the timer in Firebase and make a move for the current team
                         if (!$scope.currentGame.winner) {
-                            $scope.currentGame.timeOfNextMove = $scope.getTimeOfNextMove(5);
                             $scope.makeMove();
                         }
                         // Otherwise, reset the game since it has been won
@@ -468,17 +455,11 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                             $scope.resetCurrentGame();
                         }
                     }
-                    else {
-                        // If there is a winner and this is a non-host, reset the time and wait for a new game
-                        if ($scope.currentGame.winner) {
-                            $scope.numSecondsUntilNextMove = 10;
-                        }
-                    }
+                }
 
-                    // Set the game message if the user is logged in
-                    if ($scope.loggedInUser) {
-                        $scope.setGameMessage();
-                    }
+                // Set the game message if the user is logged in
+                if ($scope.loggedInUser) {
+                    $scope.setGameMessage();
                 }
             });
         };
