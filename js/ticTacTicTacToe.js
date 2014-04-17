@@ -28,7 +28,7 @@ app.filter('reverse', function() {
 /* Returns the empty string if the input is 0; otherwise, returns the input */
 app.filter("replaceZeroWithEmptyString", function() {
     return function(value) {
-        return value ? value : "";
+        return value > 0 ? value : "";
     };
 });
 
@@ -69,55 +69,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         twitterUsersRef.$on("child_removed", function(dataSnapshot) {
             $scope.numTwitterUsers -= 1;
         });
-
-
-        /********************/
-        /*  LOGIN / LOGOUT  */
-        /********************/
-        // Get the time offset between this client and the Firebase server and set the local timer
-        $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset").then(function() {
-            // Create a 3-way binding with the current game
-            $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function(unbind) {
-                // If the current user is logged in, setup the current game
-                $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
-                    if (loggedInUser) {
-                        $scope.setupGame(loggedInUser);
-                    }
-                });
-            });
-        });
-
-        /* Logs the current user in and joins the current game */
-        $scope.joinGame = function(provider) {
-            $scope.loginObj.$login(provider).then(function(loggedInUser) {
-                $scope.setupGame(loggedInUser);
-            }, function(error) {
-               console.error("Login failed: ", error);
-            });
-        };
-
-        /* Logs the logged-in user out */
-        $scope.logoutUser = function() {
-            // Remove the user from their team's logged-in users node
-            $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid).remove(function() {
-                // Log the user out of Firebase
-                $scope.loginObj.$logout();
-
-                // Clear the local logged-in user, the game message, and the move suggestions
-                $scope.loggedInUser = null;
-                $scope.gameMessage = null;
-                $scope.suggestions = null;
-
-                // Turn off any Firebase event listeners
-                $scope.rootRef.child("suggestions").off();
-                $scope.rootRef.child(".info/connected").off();
-
-                // Clear the update time interval
-                if ($scope.isHost) {
-                    window.clearInterval($scope.updateTimerInterval);
-                }
-            });
-        };
 
 
         /****************/
@@ -189,33 +140,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 }
             });
 
-            // Keep track of the move suggestions
-            $scope.suggestions = $scope.getEmptyGrid(0);
-            $scope.rootRef.child("suggestions").on("child_added", function(childSnapshot) {
-                var suggestion = childSnapshot.val();
-
-                // Add the user's first suggestion to the suggestions grid
-                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
-            });
-            $scope.rootRef.child("suggestions/").on("child_changed", function(childSnapshot) {
-                var suggestion = childSnapshot.val();
-
-                // Remove the user's previous suggestion from the suggestions grid
-                $scope.suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][suggestion.previousSuggestion.columnIndex] -= 1;
-
-                // Add the user's current suggestion to the suggestions grid
-                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
-            });
-            $scope.rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
-                var suggestion = childSnapshot.val();
-
-                // Remove the user's suggestion from the suggestions grid
-                $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
-
-                // Reset the logged-in user's current suggestion
-                $scope.loggedInUser.currentSuggestion = null;
-            });
-
             // If the current game does not have a host, reset the game and make the logged-in user host
             if (!$scope.currentGame.hasHost) {
                 // Reset the current game
@@ -227,6 +151,82 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Update the game message text
             $scope.setGameMessage();
+        };
+
+        // Keep track of the move suggestions
+        $scope.suggestions = $scope.getEmptyGrid(0);
+        $scope.rootRef.child("suggestions").on("child_added", function(childSnapshot) {
+            var suggestion = childSnapshot.val();
+
+            // Add the user's first suggestion to the suggestions grid
+            $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+        });
+        $scope.rootRef.child("suggestions/").on("child_changed", function(childSnapshot) {
+            var suggestion = childSnapshot.val();
+
+            // Remove the user's previous suggestion from the suggestions grid
+            $scope.suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][suggestion.previousSuggestion.columnIndex] -= 1;
+
+            // Add the user's current suggestion to the suggestions grid
+            $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+        });
+        $scope.rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
+            var suggestion = childSnapshot.val();
+
+            // Remove the user's suggestion from the suggestions grid
+            $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
+
+            // Reset the logged-in user's current suggestion
+            if ($scope.loggedInUser) {
+                $scope.loggedInUser.currentSuggestion = null;
+            }
+        });
+
+
+        /********************/
+        /*  LOGIN / LOGOUT  */
+        /********************/
+        // Get the time offset between this client and the Firebase server and set the local timer
+        $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset").then(function() {
+            // Create a 3-way binding with the current game
+            $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function(unbind) {
+                // If the current user is logged in, setup the current game
+                $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
+                    if (loggedInUser) {
+                        $scope.setupGame(loggedInUser);
+                    }
+                });
+            });
+        });
+
+        /* Logs the current user in and joins the current game */
+        $scope.joinGame = function(provider) {
+            $scope.loginObj.$login(provider).then(function(loggedInUser) {
+                $scope.setupGame(loggedInUser);
+            }, function(error) {
+               console.error("Login failed: ", error);
+            });
+        };
+
+        /* Logs the logged-in user out */
+        $scope.logoutUser = function() {
+            // Remove the user from their team's logged-in users node
+            $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid).remove(function() {
+                // Log the user out of Firebase
+                $scope.loginObj.$logout();
+
+                // Clear the local logged-in user, the game message, and the move suggestions
+                $scope.loggedInUser = null;
+                $scope.gameMessage = null;
+
+                // Turn off any Firebase event listeners
+                $scope.rootRef.child(".info/connected").off();
+
+                // Clear the update time interval
+                if ($scope.isHost) {
+                    window.clearInterval($scope.updateTimerInterval);
+                }
+            });
         };
 
 
