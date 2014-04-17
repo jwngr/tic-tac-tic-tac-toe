@@ -428,7 +428,10 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             window.clearInterval($scope.updateTimerInterval);
 
             // Update the number of seconds until the next move
-            $scope.numSecondsUntilNextMove = Math.ceil((currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
+            $scope.numSecondsUntilNextMove = Math.ceil((currentGame.timeOfNextMove - $scope.serverTimeOffset - new Date().getTime()) / 1000);
+            if ($scope.numSecondsUntilNextMove <= 0) {
+                $scope.numSecondsUntilNextMove = 5;
+            }
 
             // Update the timer every second
             $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
@@ -443,7 +446,9 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $scope.updateTimer = function() {
             $timeout(function() {
                 // Decrement the number of seconds until the next move
-                $scope.numSecondsUntilNextMove -= 1;
+                if ($scope.numSecondsUntilNextMove > 0) {
+                    $scope.numSecondsUntilNextMove -= 1;
+                }
 
                 // If the timer has hit zero, reset it and make a move for the current team
                 if ($scope.numSecondsUntilNextMove == 0)
