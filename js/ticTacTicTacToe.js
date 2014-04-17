@@ -386,11 +386,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         };
 
         /* Set the text of the game message */
-        $scope.setGameMessage = function() {
+        $scope.setGameMessage = function(currentGame) {
             // If a game is not complete, set the message telling whose turn it is
-            if (!$scope.currentGame.winner) {
+            currentGame = currentGame || $scope.currentGame;
+            if (!currentGame.winner) {
                 // Get the team whose turn it is and the logged-in user's team
-                var whoseTurnTeam = ($scope.currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
+                var whoseTurnTeam = (currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
                 var loggedInUsersTeam = ($scope.loggedInUser.provider == "github") ? "GitHub" : "Twitter";
 
                 // If it is the logged-in user's team's turn, tell them how much time is left to make it
@@ -405,7 +406,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Otherwise, set the message telling who won the previous game and how long it is until the next game
             else {
-                var winningTeam = ($scope.currentGame.winner == "github") ? "GitHub" : "Twitter";
+                var winningTeam = (currentGame.winner == "github") ? "GitHub" : "Twitter";
                 $scope.gameMessage = "Team " + winningTeam + " wins! A new game will start soon.";
             }
         };
@@ -419,18 +420,23 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         };
 
         /* Resets the timer every time the time for the next move is updated */
-        $scope.rootRef.child("currentGame/timeOfNextMove").on("value", function(dataSnapshot) {
+        $scope.rootRef.child("currentGame").on("value", function(dataSnapshot) {
             // Get the time of the next move
-            var timeOfNextMove = dataSnapshot.val();
+            var currentGame = dataSnapshot.val();
 
             // Clear the current update timer interval
             window.clearInterval($scope.updateTimerInterval);
 
             // Update the number of seconds until the next move
-            $scope.numSecondsUntilNextMove = Math.ceil((timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
+            $scope.numSecondsUntilNextMove = Math.ceil((currentGame.timeOfNextMove + $scope.serverTimeOffset - new Date().getTime()) / 1000);
 
             // Update the timer every second
             $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+
+            // Set the game message if the user is logged in
+            if ($scope.loggedInUser) {
+                $scope.setGameMessage(currentGame);
+            }
         });
 
         /* Updates the timer and the game message text */
@@ -455,11 +461,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                             $scope.resetCurrentGame();
                         }
                     }
-                }
-
-                // Set the game message if the user is logged in
-                if ($scope.loggedInUser) {
-                    $scope.setGameMessage();
                 }
             });
         };
