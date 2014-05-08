@@ -1,7 +1,7 @@
 var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 
 /* Returns a list of items in reverse order */
-app.filter('reverse', function() {
+app.filter("reverse", function() {
     /* Converts a Firebase list to a JS array */
     function toArray(list) {
         var k, out = [];
@@ -44,6 +44,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /***************/
         /*  STATS HUB  */
         /***************/
+        // TODO: I don't need to use .bind() here; just use return value of $firebase(ref)
         // Create a 3-way binding to the play by play events, limiting how many we keep at a time
         $firebase($scope.rootRef.child("events").limit(100)).$bind($scope, "events").then();
 
@@ -89,35 +90,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             ];
         };
 
-        /* Initializes a new game, wiping out any existing game */
-        $scope.resetCurrentGame = function() {
-            // Initialize a new game
-            $scope.currentGame = {
-                whoseTurn: (Math.random() > 0.5) ? "github" : "twitter",
-                hasHost: true,
-                winner: "",
-                grids: $scope.getEmptyGrid(""),
-                uberGrid: [
-                    [ "", "", "" ],
-                    [ "", "", "" ],
-                    [ "", "", "" ]
-                ],
-                previousMove: false,
-                validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
-                timeOfNextMove: $scope.generateTimeOfNextMove(5)
-            };
-
-            // Initialize the suggestions grid
-            $scope.suggestions = $scope.getEmptyGrid(0);
-
-            // Create a new game event
-            $scope.events.$add({
-                imageUrl: "./images/ticTacTicTacToeLogo.png",
-                text: "A new game has started!",
-                type: "newGame"
-            });
-        };
-
         /* Sets up the current game (making a new one if needed) */
         $scope.setupGame = function(loggedInUser) {
             // Store the logged-in user locally
@@ -132,22 +104,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                     // Add the user to the logged-in users list when they get connected
                     $firebase(loggedInUsersRef).$set(true);
-
-                    // If the host is getting disconnected, specify that the current game has no host
-                    if ($scope.isHost) {
-                        $scope.rootRef.child("currentGame/hasHost").onDisconnect().set(false);
-                    }
                 }
             });
-
-            // If the current game does not have a host, reset the game and make the logged-in user host
-            if (!$scope.currentGame.hasHost) {
-                // Reset the current game
-                $scope.resetCurrentGame();
-
-                // Set the logged-in user as host
-                $scope.isHost = true;
-            }
 
             // Update the game message text
             $scope.setGameMessage();
@@ -221,11 +179,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 // Turn off any Firebase event listeners
                 $scope.rootRef.child(".info/connected").off();
-
-                // Clear the update time interval
-                if ($scope.isHost) {
-                    window.clearInterval($scope.updateTimerInterval);
-                }
             });
         };
 
@@ -272,119 +225,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             }
         };
 
-        /* Makes a move for the current team by choosing the most popular suggestion */
-        $scope.makeMove = function() {
-            // Get the number of suggestions
-            var numSuggestions = $scope.getNumSuggestions();
-
-            // Create a variable to hold the most suggested cell
-            var maxSuggestion = {
-                gridIndex: null,
-                rowIndex: null,
-                cellIndex: null,
-                numTimesSuggested: 0
-            };
-
-            // If there were no suggestions, just select a random valid cell
-            if (numSuggestions == 0) {
-                maxSuggestion = $scope.getRandomValidMove();
-            }
-
-            // Otherwise, select the most popular cell
-            else {
-                for (var i = 0; i < 9; ++i) {
-                    for (var j = 0; j < 3; ++j) {
-                        for (var k = 0; k < 3; ++k) {
-                            var numTimesSuggested = $scope.suggestions[i][j][k];
-                            if (numTimesSuggested > maxSuggestion.numTimesSuggested || (numTimesSuggested == maxSuggestion.numTimesSuggested && Math.random() > 0.5)) {
-                                maxSuggestion = {
-                                    gridIndex: i,
-                                    rowIndex: j,
-                                    columnIndex: k,
-                                    numTimesSuggested: numTimesSuggested
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Add the move to the board
-            $scope.addMove(maxSuggestion.gridIndex, maxSuggestion.rowIndex, maxSuggestion.columnIndex);
-        };
-
-        /* Adds a new move to the board */
-        $scope.addMove = function(gridIndex, rowIndex, columnIndex) {
-            // Update the inputted cell's value
-            $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] = $scope.currentGame.whoseTurn;
-
-            // Get the image URL and team name of the team who is making the move
-            var imageUrl = ($scope.currentGame.whoseTurn == "github") ? "./images/gitHubLogo.png" : "./images/twitterLogo.png";
-            var team = ($scope.currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
-
-            // Create an event for the move
-            $scope.events.$add({
-                imageUrl: imageUrl,
-                teamName: team,
-                text: " played [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
-                type: "move"
-            });
-
-            // Update whose turn it is
-            $scope.currentGame.whoseTurn = ($scope.currentGame.whoseTurn == "github") ? "twitter" : "github";
-
-            // Store this move as the previous move
-            $scope.currentGame.previousMove = {
-                gridIndex: gridIndex,
-                rowIndex: rowIndex,
-                columnIndex: columnIndex
-            };
-
-            // Clear the move suggestions
-            $scope.rootRef.child("suggestions").remove();
-
-            // Update the uber grid if the current grid was won
-            $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3] = $scope.getGridWinner($scope.currentGame.grids[gridIndex]);
-
-            // Get the grids in which the next move can be made
-            $scope.currentGame.validGridsForNextMove = $scope.getValidGridsForNextMove(rowIndex, columnIndex);
-
-            // Check if the uber grid was won and the game should end
-            var uberGridWinner = $scope.getGridWinner($scope.currentGame.uberGrid);
-            if (uberGridWinner) {
-                // Add a game over event to the play by play ticker
-                var team = (uberGridWinner == "github") ? "GitHub" : "Twitter";
-                $scope.events.$add({
-                    imageUrl: "./images/ticTacTicTacToeLogo.png",
-                    teamName: team,
-                    text: " won!",
-                    type: "gameOver"
-                });
-
-                // Specify who won the game
-                $scope.currentGame.winner = uberGridWinner;
-
-                // Wait ten seconds until the next game starts
-                $scope.currentGame.timeOfNextMove += 10000;
-
-                // Increment the number of teams wins
-                if (uberGridWinner == "github") {
-                    $scope.wins.github += 1;
-                }
-                else {
-                    $scope.wins.twitter += 1;
-                }
-
-                // Append the current game to the games history
-                $firebase($scope.rootRef.child("history")).$add($scope.currentGame);
-            }
-
-            // Otherwise, if there is no winner, set the next move to be made in five seconds
-            else {
-                $scope.currentGame.timeOfNextMove += 5000;
-            }
-        };
-
         /* Set the text of the game message */
         $scope.setGameMessage = function(currentGame) {
             // If a game is not complete, set the message telling whose turn it is
@@ -414,11 +254,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /***********/
         /*  TIMER  */
         /***********/
-        /* Returns the time at which the next move should be made */
-        $scope.generateTimeOfNextMove = function(numSecondsUntilNextMove) {
-            return new Date().getTime() + $scope.serverTimeOffset + (numSecondsUntilNextMove * 1000);
-        };
-
         /* Resets the timer every time the time for the next move is updated */
         $scope.rootRef.child("currentGame").on("value", function(dataSnapshot) {
             // Get the time of the next move
@@ -455,17 +290,6 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 {
                     // Clear the current update timer interval
                     window.clearInterval($scope.updateTimerInterval);
-
-                    if ($scope.isHost) {
-                        // If there is not a winner, reset the timer in Firebase and make a move for the current team
-                        if (!$scope.currentGame.winner) {
-                            $scope.makeMove();
-                        }
-                        // Otherwise, reset the game since it has been won
-                        else {
-                            $scope.resetCurrentGame();
-                        }
-                    }
                 }
             });
         };
@@ -474,76 +298,12 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /**********************/
         /*  HELPER FUNCTIONS  */
         /**********************/
-        /* Returns a random grid cell in which the next move can be made */
-        $scope.getRandomValidMove = function() {
-            // Get the valid grids for next move as an array
-            var validGridsForNextMove = $scope.currentGame.validGridsForNextMove.split(",");
-
-            // Randomly choose one of the valid grids to make a move in
-            var numValidGridsForNextMove = validGridsForNextMove.length;
-            var gridIndex = parseInt(validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)]);
-
-            // Keep looping until we find cell coordinates for an open cell
-            var rowIndex = Math.floor(Math.random() * 3);
-            var columnIndex = Math.floor(Math.random() * 3);
-            while ($scope.currentGame.grids[gridIndex][rowIndex][columnIndex] != "") {
-                rowIndex = Math.floor(Math.random() * 3);
-                columnIndex = Math.floor(Math.random() * 3);
-            }
-
-            // Return the random, valid cell
-            return {
-                gridIndex: gridIndex,
-                rowIndex: rowIndex,
-                columnIndex: columnIndex
-            }
-        };
-
-        /* Returns the total number of total suggestions the current team has made */
-        $scope.getNumSuggestions = function() {
-            var numSuggestions = 0;
-            for (var i = 0; i < 9; ++i) {
-                for (var j = 0; j < 3; ++j) {
-                    for (var k = 0; k < 3; ++k) {
-                        numSuggestions += $scope.suggestions[i][j][k];
-                    }
-                }
-            }
-            return numSuggestions;
-        };
-
         /* Returns true if the cell represented by the inputs is a cell in which the next move can be validly made */
         $scope.isMoveValid = function(gridIndex, rowIndex, columnIndex) {
             return ($scope.currentGame.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1);
         };
 
-        /* Returns a comma-separated string of each grid in which the next move can validly be made */
-        $scope.getValidGridsForNextMove = function(rowIndex, columnIndex) {
-            // If that grid is already won, add each un-won grid to the valid grids for next move list
-            if ($scope.currentGame.uberGrid[rowIndex][columnIndex]) {
-                validGridsForNextMove = [];
-                for (var i = 0; i < 3; ++i) {
-                    for (var j = 0; j < 3; ++j) {
-                        if ($scope.currentGame.uberGrid[i][j] == "") {
-                            validGridsForNextMove.push((3 * i) + j);
-                        }
-                    }
-                }
-            }
-            else {
-                // Otherwise, just add that single grid
-                var grids = [
-                    [0, 1, 2],
-                    [3, 4, 5],
-                    [6, 7, 8]
-                ];
-                validGridsForNextMove = [grids[rowIndex][columnIndex]];
-            }
-
-            // Return the valid grids for the next move as a string
-            return validGridsForNextMove.toString();
-        };
-
+        // TODO: simplify this for clients and just get it from $scope.currentGame.uberGrid
         /* Returns the winner of the inputted grid or "" if no one has won the grid */
         $scope.getGridWinner = function(grid) {
             // Set the grid as not won

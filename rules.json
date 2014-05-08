@@ -1,25 +1,27 @@
 {
   "rules": {
-    ".read": true,
+    // TODO: try out Tom's Blaze compiler
 
     "currentGame": {
-      ".write": "auth != null && auth.uid == 'github:4149793'"
+      ".read": true
     },
 
     "events": {
-      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)",
+      ".read": true,
+      ".write": "auth != null && root.child('currentGame').child('whoseTurn').val() == auth.provider",
 
       "$event": {
-        ".validate": "(auth.uid == 'github:4149793' || (newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion')) && newData.hasChildren(['imageUrl', 'text', 'type'])"
+        ".validate": "newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion' && newData.hasChildren(['imageUrl', 'text', 'type'])"
       }
     },
 
     "history": {
-      ".write": "auth != null && auth.uid == 'github:4149793'"
     },
 
     "loggedInUsers": {
-      //".read": "auth != null && auth.uid == 'github:4149793'",
+      // TODO: I'd like to set this to false but I need to have a way to determine how many total users there are without looping through each of them
+      // ".read": false,
+      ".read": true,
       ".write": "auth != null",
 
       "$provider": {
@@ -30,7 +32,8 @@
     },
 
     "suggestions": {
-      ".write": "auth != null && (auth.uid == 'github:4149793' || root.child('currentGame').child('whoseTurn').val() == auth.provider)",
+      ".read": true,
+      ".write": "auth != null && root.child('currentGame').child('whoseTurn').val() == auth.provider",
 
       "$uid": {
         ".validate": "auth.uid == $uid && newData.hasChildren(['gridIndex', 'rowIndex', 'columnIndex'])"
@@ -38,11 +41,7 @@
     },
 
     "wins": {
-      ".write": "auth != null && auth.uid == 'github:4149793' && newData.hasChildren(['github', 'twitter'])",
-
-      "$provider": {
-        ".validate": "newData.isNumber() && newData.val() >= 0"
-      }
+      ".read": true
     }
   }
 }
