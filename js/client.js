@@ -265,7 +265,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             // Update the number of seconds until the next move
             $scope.numSecondsUntilNextMove = Math.ceil((currentGame.timeOfNextMove - $scope.serverTimeOffset - new Date().getTime()) / 1000);
             if ($scope.numSecondsUntilNextMove <= 0) {
-                $scope.numSecondsUntilNextMove = 5;
+                $scope.numSecondsUntilNextMove = 7;
             }
 
             // Update the timer every second

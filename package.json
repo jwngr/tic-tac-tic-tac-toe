@@ -1,0 +1,21 @@
+{
+  "name": "tic-tac-tic-tac-toe",
+  "description": "Multiplayer tic-tac-toe, with a twist",
+  "author": "Jacob Wenger",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "js/server.js",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jacobawenger/tic-tac-tic-tac-toe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jacobawenger/tic-tac-tic-tac-toe/issues"
+  },
+  "homepage": "https://github.com/jacobawenger/tic-tac-tic-tac-toe",
+  "dependencies": {
+    "firebase": "~1.0.17"
+  },
+  "devDependencies": {}
+}

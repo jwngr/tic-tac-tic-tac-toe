@@ -2,6 +2,7 @@
 /*  MODULES  */
 /*************/
 var Firebase = require("firebase");
+console.log(process.argv[2]);
 
 /********************/
 /*  INITIALIZATION  */
@@ -11,23 +12,23 @@ var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
 
 // TODO: get these off global scope?
 var serverTimeOffset;
-var numSecondsUntilNextMove = 5;
+var numSecondsUntilNextMove;
 var suggestions = getEmptyGrid(0);
 var currentGame;
 var wins;
 
 // Make sure we passed in the Firebase secret as a command line argument
-if (process.argv.length !== 3) {
+if (process.argv.length !== 3 && typeof process.env.FIREBASE_SECRET === "undefined") {
   console.log("Usage: node server.js <firebase_auth_token>");
-  process.exit();
+  process.exit(1);
 }
 
 // Autheticate to the Firebase
-rootRef.auth(process.argv[2], function(error) {
+rootRef.auth(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
   // Exit if the auth token was invalid
   if (error) {
     console.log(error.code + " Error: Invalid auth token for " + rootRef.toString());
-    process.exit();
+    process.exit(1);
   }
 
   // Get the time offset between this client and the Firebase server and set the local timer
@@ -102,7 +103,7 @@ function resetCurrentGame() {
       [ "", "", "" ]
     ],
     validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
-    timeOfNextMove: generateTimeOfNextMove(5)
+    timeOfNextMove: generateTimeOfNextMove(7)
   };
 
   // Update Firebase with the current game
@@ -118,7 +119,7 @@ function resetCurrentGame() {
   });
 
   // Reset the timer
-  numSecondsUntilNextMove = 5;
+  numSecondsUntilNextMove = 7;
 };
 
 
@@ -134,6 +135,7 @@ function generateTimeOfNextMove(numSecondsUntilNextMove) {
 function updateTimer() {
   // Decrement the number of seconds until the next move
   numSecondsUntilNextMove -= 1;
+  console.log(numSecondsUntilNextMove);
 
   // If the timer has hit zero, reset it and make a move for the current team
   if (numSecondsUntilNextMove == 0)
@@ -224,8 +226,8 @@ function makeMove() {
 
   // Otherwise, if there is no winner, set the next move to be made in five seconds
   else {
-    currentGame.timeOfNextMove += 5000;
-    numSecondsUntilNextMove = 5;
+    currentGame.timeOfNextMove += 7000;
+    numSecondsUntilNextMove = 7;
   }
 
   // Update the current game in Firebase
