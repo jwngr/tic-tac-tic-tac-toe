@@ -2,7 +2,7 @@
 /*  MODULES  */
 /*************/
 var Firebase = require("firebase");
-console.log(process.argv[2]);
+console.log(process.env.FIREBASE_SECRET);
 
 /********************/
 /*  INITIALIZATION  */
