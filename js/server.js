@@ -2,7 +2,6 @@
 /*  MODULES  */
 /*************/
 var Firebase = require("firebase");
-console.log(process.env.FIREBASE_SECRET);
 
 /********************/
 /*  INITIALIZATION  */
@@ -18,7 +17,7 @@ var currentGame;
 var wins;
 
 // Make sure we passed in the Firebase secret as a command line argument
-if (process.argv.length !== 3 && typeof process.env.FIREBASE_SECRET === "undefined") {
+if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_SECRET === "undefined") {
   console.log("Usage: node server.js <firebase_auth_token>");
   process.exit(1);
 }
@@ -135,7 +134,6 @@ function generateTimeOfNextMove(numSecondsUntilNextMove) {
 function updateTimer() {
   // Decrement the number of seconds until the next move
   numSecondsUntilNextMove -= 1;
-  console.log(numSecondsUntilNextMove);
 
   // If the timer has hit zero, reset it and make a move for the current team
   if (numSecondsUntilNextMove == 0)
