@@ -15,8 +15,7 @@
   },
   "homepage": "https://github.com/jacobawenger/tic-tac-tic-tac-toe",
   "dependencies": {
-    "firebase": "~1.0.17",
-    "express": "^4.4.3"
+    "firebase": "~1.0.17"
   },
   "devDependencies": {}
 }
