@@ -2,6 +2,17 @@
 /*  MODULES  */
 /*************/
 var Firebase = require("firebase");
+var express = require("express");
+var app = express();
+
+/************/
+/*  HEROKU  */
+/************/
+// I don't know why I need this, but Heroku will fail unless I have it
+var port = process.env.PORT;
+app.listen(port, function() {
+  console.log("Listening on " + port);
+});
 
 /********************/
 /*  INITIALIZATION  */
