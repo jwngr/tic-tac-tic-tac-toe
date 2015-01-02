@@ -256,7 +256,6 @@ createSuggestionEvent = function(uid, suggestion) {
   var provider = uid.split(":")[0];
   rootRef.child("loggedInUsers").child(provider).child(uid).once("value", function(userSnapshot) {
     var user = userSnapshot.val();
-    console.log(user);
     if (user) {
       rootRef.child("events").push({
         imageUrl: user.imageUrl,
