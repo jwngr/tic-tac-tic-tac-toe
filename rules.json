@@ -1,6 +1,6 @@
 {
   "rules": {
-    // TODO: try out Tom's Blaze compiler
+    ".write": "auth !== null && auth.uid === 'server'",
 
     "currentGame": {
       ".read": true
@@ -8,25 +8,43 @@
 
     "events": {
       ".read": true,
-      ".write": "auth != null && root.child('currentGame').child('whoseTurn').val() == auth.provider",
 
       "$event": {
-        ".validate": "newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion' && newData.hasChildren(['imageUrl', 'text', 'type'])"
+        ".validate": "newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion' && newData.hasChildren(['imageUrl', 'text', 'type'])",
+        "imageUrl": {
+          ".validate": "newData.isString()"
+        },
+        "text": {
+          ".validate": "newData.isString()"
+        },
+        "type": {
+          ".validate": "newData.isString() && (newData.val() === 'newGame' || newData.val() === 'suggestions' || newData.val() === 'move' || newData.val() === 'gameOver')"
+        }
       }
     },
 
-    "history": {
-    },
-
     "loggedInUsers": {
-      // TODO: I'd like to set this to false but I need to have a way to determine how many total users there are without looping through each of them
-      // ".read": false,
+      // TODO: I'd like to set ".read" to false but I need to have a way to determine how many total
+      // users there are without looping through each of them, which requires ".read" to be true here.
       ".read": true,
       ".write": "auth != null",
 
       "$provider": {
         "$uid": {
-          ".validate": "auth.provider == $provider && auth.uid == $uid"
+          ".validate": "auth.provider == $provider && auth.uid == $uid && newData.hasChildren(['imageUrl', 'userUrl', 'username'])",
+
+          "imageUrl": {
+            ".validate": "newData.isString()"
+          },
+          "userUrl": {
+            ".validate": "newData.isString()"
+          },
+          "username": {
+            ".validate": "newData.isString()"
+          },
+          "$other": {
+            ".validate": "false"
+          }
         }
       }
     },
@@ -36,7 +54,23 @@
       ".write": "auth != null && root.child('currentGame').child('whoseTurn').val() == auth.provider",
 
       "$uid": {
-        ".validate": "auth.uid == $uid && newData.hasChildren(['gridIndex', 'rowIndex', 'columnIndex'])"
+        ".validate": "auth.uid == $uid && newData.hasChildren(['gridIndex', 'rowIndex', 'columnIndex', 'previousSuggestion'])",
+
+        "gridIndex": {
+          ".validate": "newData.isNumber()"
+        },
+        "rowIndex": {
+          ".validate": "newData.isNumber()"
+        },
+        "columnIndex": {
+          ".validate": "newData.isNumber()"
+        },
+        "previousSuggestion": {
+          ".validate": "newData.isBoolean()"
+        },
+        "$other": {
+          ".validate": "false"
+        }
       }
     },
 

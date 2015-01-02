@@ -27,7 +27,7 @@ var numSecondsUntilNextMove;
 var suggestions;
 
 // Make sure the Firebase secret was provided
-if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_SECRET === "undefined") {
+if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_TOKEN === "undefined") {
   console.log("Usage: node server.js <FIREBASE_SECRET>");
   process.exit(1);
 }
