@@ -62,17 +62,20 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, func
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
 
     // Create an event for the logged-in user's suggestion
-    rootRef.child("loggedInUsers").child(childSnapshot.key()).once("value", function(userSnapshot) {
+    var provider = childSnapshot.key().split(":")[0];
+    rootRef.child("loggedInUsers").child(provider).child(childSnapshot.key()).once("value", function(userSnapshot) {
       var user = userSnapshot.val();
-
-      rootRef.child("events").push({
-        imageUrl: user.imageUrl,
-        userUrl: user.userUrl,
-        text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
-        username: user.username,
-        uid: childSnapshot.key(),
-        type: "suggestion"
-      });
+      console.log(user);
+      if (user) {
+        rootRef.child("events").push({
+          imageUrl: user.imageUrl,
+          userUrl: user.userUrl,
+          text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
+          username: user.username,
+          uid: childSnapshot.key(),
+          type: "suggestion"
+        });
+      }
     });
   });
   // Decrement the correct cell in the suggestions grid when a suggestion is removed

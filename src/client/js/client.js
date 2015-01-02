@@ -107,15 +107,15 @@
 
         // Keep track of when the logged-in user in connected or disconnected from Firebase
         $scope.rootRef.child(".info/connected").on("value", function(dataSnapshot) {
-          if (dataSnapshot.val()) {
+          if (dataSnapshot.val() === true) {
             // Remove the user from the logged-in users list when they get disconnected
             var loggedInUsersRef = $scope.rootRef.child("loggedInUsers/" + $scope.authData.provider + "/" + $scope.authData.uid);
             loggedInUsersRef.onDisconnect().remove();
 
             // Add the user to the logged-in users list when they get connected
-            var username = $scope.authData.username;
+            var username = ($scope.authData.provider === "github") ? $scope.authData.github.username : $scope.authData.twitter.username;
             loggedInUsersRef.set({
-              imageUrl: ($scope.authData.provider === "github") ? $scope.authData.avatar_url : $scope.authData.profile_image_url_https,
+              imageUrl: ($scope.authData.provider === "github") ? $scope.authData.github.cachedUserProfile.avatar_url : $scope.authData.twitter.cachedUserProfile.profile_image_url_https,
               userUrl: ($scope.authData.provider === "github") ?  "https://github.com/" + username : "https://twitter.com/" + username,
               username: username
             });
@@ -168,7 +168,6 @@
         $scope.currentGame.$loaded(function() {
           // If the current user is logged in, setup the current game
           var authData = $scope.authObj.$getAuth();
-          console.log("authData:", authData);
           if (authData) {
             $scope.setupGame(authData);
           }
@@ -178,7 +177,6 @@
       /* Logs the current user in and joins the current game */
       $scope.joinGame = function(provider) {
         $scope.authObj.$authWithOAuthPopup(provider).then(function(authData) {
-          console.log("authData 2:", authData);
           $scope.setupGame(authData);
         }, function(error) {
            console.error("Login failed: ", error);
@@ -190,7 +188,7 @@
         // Remove the user from their team's logged-in users node
         $scope.rootRef.child("loggedInUsers/" + $scope.authData.provider + "/" + $scope.authData.uid).remove(function() {
           // Log the user out of Firebase
-          $scope.loginObj.$logout();
+          $scope.authObj.$unauth();
 
           // Clear the local logged-in user, the game message, and the move suggestions
           $scope.authData = null;
