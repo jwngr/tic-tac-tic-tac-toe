@@ -1,5 +1,5 @@
 {
   "firebase": "tic-tac-tic-tac-toe",
   "rules": "./rules.json",
-  "public": "."
+  "public": "dist/"
 }
