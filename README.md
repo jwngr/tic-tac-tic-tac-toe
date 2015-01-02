@@ -1,7 +1,5 @@
 # tic-tac-tic-tac-toe
 
-Tic-tac-toe, with a multiplayer twist
-
 [tic-tac-tic-tac-toe](https://tic-tac-tic-tac-toe.firebaseapp.com) is a new twist on the age old
 game of tic-tac-toe. Powered by [Firebase](https://www.firebase.com) and
 [AngularFire](https://www.firebase.com/docs/web/libraries/angular/index.html), tic-tac-tic-tac-toe
