@@ -2,21 +2,21 @@
 /*  FONTS  */
 /***********/
 @font-face {
-    /* Norwester font by Jamie Wilson: http://jamiewilson.io/norwester/ */
-    font-family: "Norwester";
-    src: url("../fonts/norwester.woff");
+  /* Norwester font by Jamie Wilson: http://jamiewilson.io/norwester/ */
+  font-family: "Norwester";
+  src: url("../fonts/norwester.woff");
 }
 
 @font-face {
-    /* ClearSans front by Intel Open Source Technology Center: https://01.org/clear-sans */
-    font-family: "ClearSans";
-    src: url("../fonts/clearSans.woff");
+  /* ClearSans front by Intel Open Source Technology Center: https://01.org/clear-sans */
+  font-family: "ClearSans";
+  src: url("../fonts/clearSans.woff");
 }
 
 @font-face {
-    /* ClearSansBold front by Intel Open Source Technology Center: https://01.org/clear-sans */
-    font-family: "ClearSansBold";
-    src: url("../fonts/clearSansBold.woff");
+  /* ClearSansBold front by Intel Open Source Technology Center: https://01.org/clear-sans */
+  font-family: "ClearSansBold";
+  src: url("../fonts/clearSansBold.woff");
 }
 
 /************/
@@ -33,32 +33,32 @@ $gray: #CCCCCC;
 /*  PAGE-WIDE  */
 /***************/
 body {
-    /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
-    background-image: url("../images/background.png");
+  /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
+  background-image: url("../images/background.png");
 }
 
 h2 {
-    font-family: "Norwester";
-    margin-bottom: 20px;
-    text-align: center;
+  font-family: "Norwester";
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 /************/
 /*  HEADER  */
 /************/
 #header {
-    text-align: center;
-    font-family: "Norwester";
-    margin-bottom: 30px;
+  text-align: center;
+  font-family: "Norwester";
+  margin-bottom: 30px;
 
-    h1 {
-        font-size: 50px;
-    }
+  h1 {
+    font-size: 50px;
+  }
 
-    p {
-        font-size: 24px;
-        margin-top: -20px;
-    }
+  p {
+    font-size: 24px;
+    margin-top: -20px;
+  }
 }
 
 /*******************/
@@ -66,382 +66,382 @@ h2 {
 /*******************/
 #logoutButton
 {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    border: solid 5px #000;
-    padding: 10px;
-    cursor: pointer;
-    font-family: "Norwester";
-    font-size: 14px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: solid 5px #000;
+  padding: 10px;
+  cursor: pointer;
+  font-family: "Norwester";
+  font-size: 14px;
 
-    &:hover {
-        background: $gray;
-    }
+  &:hover {
+    background: $gray;
+  }
 }
 
 /*******************/
 /*  LOGIN BUTTONS  */
 /*******************/
 #loginButtons {
-    width: 650px;
-    margin: 0 auto 30px auto;
+  width: 650px;
+  margin: 0 auto 30px auto;
+  text-align: center;
+
+  #gitHubLoginButton, #twitterLoginButton {
+    float: left;
+    width: 300px;
     text-align: center;
+    border: solid 5px #000;
+    cursor: pointer;
+    padding-top: 5px;
 
-    #gitHubLoginButton, #twitterLoginButton {
-        float: left;
-        width: 300px;
-        text-align: center;
-        border: solid 5px #000;
-        cursor: pointer;
-        padding-top: 5px;
-
-        &:hover {
-            background: $gray;
-        }
-
-        img {
-            display: inline;
-            padding: 3px;
-            width: 34px;
-            height: 34px;
-        }
-
-        p {
-            display: inline;
-            position: relative;
-            top: -8px;
-            font-family: "Norwester";
-            font-size: 30px;
-        }
+    &:hover {
+      background: $gray;
     }
 
-    #twitterLoginButton {
-        float: right;
+    img {
+      display: inline;
+      padding: 3px;
+      width: 34px;
+      height: 34px;
     }
+
+    p {
+      display: inline;
+      position: relative;
+      top: -8px;
+      font-family: "Norwester";
+      font-size: 30px;
+    }
+  }
+
+  #twitterLoginButton {
+    float: right;
+  }
 }
 
 /*******************/
 /*  GAME MESSAGES  */
 /*******************/
 #gameMessages {
-    font-family: "ClearSans";
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 30px;
+  font-family: "ClearSans";
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 30px;
 }
 
 /*******************************/
 /*  TIC-TAC-TIC-TAC-TOE BOARD  */
 /*******************************/
 #boardWrapper {
-    text-align: center;
-    margin-bottom: 30px;
-    width: 793px;
-    margin: auto;
+  text-align: center;
+  margin-bottom: 30px;
+  width: 793px;
+  margin: auto;
 
-    #board {
-        float: left;
-        margin-right: 25px;
+  #board {
+    float: left;
+    margin-right: 25px;
 
-        /* Disable highlighting */
-        ::-moz-selection{
-            background-color: transparent;
-        }
-        ::selection {
-            background-color: transparent;
-        }
-
-        .cell {
-            display: inline;
-            float: left;
-            border: solid 1px black;
-            width: 50px;
-            height: 50px;
-
-            &:first-of-type {
-                border-left: none;
-            }
-
-            &:last-of-type {
-                border-right: none;
-            }
-
-            &.validForMove {
-                background: $green;
-                cursor: pointer;
-            }
-
-            &.suggestedMove {
-                background: $orange;
-            }
-
-            &.previousMove {
-                background: $blue;
-            }
-
-            & > img {
-                width: 36px;
-                height: 36px;
-                margin-top: 7px;
-                transition: 3s;
-            }
-
-            & > p {
-                font-family: "ClearSansBold";
-                font-size: 16px;
-                margin: 14px 0 0 0;
-            }
-        }
-
-        .row {
-            &:first-of-type > .cell {
-                border-top: none;
-            }
-
-            &:nth-of-type(3) > .cell {
-                border-bottom: none;
-            }
-        }
-
-        .grid {
-            display: inline;
-            float: left;
-            width: 155px;
-            height: 155px;
-            padding: 5px;
-            border: solid 3px black;
-
-            &:nth-of-type(3n + 1) {
-                border-left: none;
-                clear: left;
-            }
-
-            &:nth-of-type(3n) {
-                border-right: none;
-            }
-
-            &:nth-of-type(1), &:nth-of-type(2), &:nth-of-type(3) {
-                border-top: none;
-            }
-
-            &:nth-of-type(7), &:nth-of-type(8), &:nth-of-type(9) {
-                border-bottom: none;
-            }
-
-            &:last-of-type {
-                border-right: none;
-            }
-
-            .gridWinner {
-                /* Social icons from: http://vervex.deviantart.com/art/Somacro-40-300DPI-Social-Media-Icons-267955425 */
-                width: 155px;
-                height: 155px;
-
-                &.winningTeam {
-                    background: $gold;
-                }
-
-                & > img {
-                    width: 120px;
-                    height: 120px;
-                    margin-top: 18px;
-                }
-            }
-        }
+    /* Disable highlighting */
+    ::-moz-selection{
+      background-color: transparent;
     }
+    ::selection {
+      background-color: transparent;
+    }
+
+    .cell {
+      display: inline;
+      float: left;
+      border: solid 1px black;
+      width: 50px;
+      height: 50px;
+
+      &:first-of-type {
+        border-left: none;
+      }
+
+      &:last-of-type {
+        border-right: none;
+      }
+
+      &.validForMove {
+        background: $green;
+        cursor: pointer;
+      }
+
+      &.suggestedMove {
+        background: $orange;
+      }
+
+      &.previousMove {
+        background: $blue;
+      }
+
+      & > img {
+        width: 36px;
+        height: 36px;
+        margin-top: 7px;
+        transition: 3s;
+      }
+
+      & > p {
+        font-family: "ClearSansBold";
+        font-size: 16px;
+        margin: 14px 0 0 0;
+      }
+    }
+
+    .row {
+      &:first-of-type > .cell {
+        border-top: none;
+      }
+
+      &:nth-of-type(3) > .cell {
+        border-bottom: none;
+      }
+    }
+
+    .grid {
+      display: inline;
+      float: left;
+      width: 155px;
+      height: 155px;
+      padding: 5px;
+      border: solid 3px black;
+
+      &:nth-of-type(3n + 1) {
+        border-left: none;
+        clear: left;
+      }
+
+      &:nth-of-type(3n) {
+        border-right: none;
+      }
+
+      &:nth-of-type(1), &:nth-of-type(2), &:nth-of-type(3) {
+        border-top: none;
+      }
+
+      &:nth-of-type(7), &:nth-of-type(8), &:nth-of-type(9) {
+        border-bottom: none;
+      }
+
+      &:last-of-type {
+        border-right: none;
+      }
+
+      .gridWinner {
+        /* Social icons from: http://vervex.deviantart.com/art/Somacro-40-300DPI-Social-Media-Icons-267955425 */
+        width: 155px;
+        height: 155px;
+
+        &.winningTeam {
+          background: $gold;
+        }
+
+        & > img {
+          width: 120px;
+          height: 120px;
+          margin-top: 18px;
+        }
+      }
+    }
+  }
 }
 
 /*********************/
 /*  STATS CONTAINER  */
 /*********************/
 #statsContainer {
-    float: left;
-    width: 251px;
-    height: 500px;
-    border: solid 5px black;
+  float: left;
+  width: 251px;
+  height: 500px;
+  border: solid 5px black;
 
-    .statsSectionTitle {
-        font-family: "Norwester";
-        font-size: 20px;
-        text-align: center;
-        margin: 0;
-        padding: 3px 0 3px 0;
-        border-bottom: solid 5px #000;
-        background: $gray;
-    }
+  .statsSectionTitle {
+    font-family: "Norwester";
+    font-size: 20px;
+    text-align: center;
+    margin: 0;
+    padding: 3px 0 3px 0;
+    border-bottom: solid 5px #000;
+    background: $gray;
+  }
 
-    #playByPlayTicker {
-        width: 100%;
-        height: 223px;
-        overflow-y: scroll;
+  #playByPlayTicker {
+    width: 100%;
+    height: 223px;
+    overflow-y: scroll;
 
-        .event {
-            border-bottom: solid 2px #000;
-            height: 50px;
+    .event {
+      border-bottom: solid 2px #000;
+      height: 50px;
 
-            &.move {
-                background: $blue;
-            }
+      &.move {
+        background: $blue;
+      }
 
-            &.newGame, &.gameOver {
-                background: $green;
-            }
+      &.newGame, &.gameOver {
+        background: $green;
+      }
 
-            &.suggestion {
-                background: $orange;
-            }
+      &.suggestion {
+        background: $orange;
+      }
 
-            .username {
-                color: darken($blue, 50%);
-                text-decoration: none;
-                font-family: "ClearSansBold";
+      .username {
+        color: darken($blue, 50%);
+        text-decoration: none;
+        font-family: "ClearSansBold";
 
-                &:hover {
-                    text-decoration: underline;
-                }
-            }
-
-            .teamName {
-                font-family: "ClearSansBold";
-            }
-
-            img {
-                float: left;
-                width: 40px;
-                height: 40px;
-                margin: 5px 8px 5px 5px;
-                border-radius: 20px;
-            }
-
-            .textWrapper {
-                float: left;
-                display: table;
-                text-align: left;
-                height: 50px;
-                width: 180px;
-                margin-top: -2px;
-            }
-
-            p {
-                display: table-cell;
-                vertical-align: middle;
-                font-family: "ClearSans";
-                font-size: 14px;
-            }
+        &:hover {
+          text-decoration: underline;
         }
-    }
+      }
 
-    #scoreboard, #numCurrentPlayers {
-        width: 100%;
-        height: 47px;
-        border-bottom: solid 5px #000;
+      .teamName {
+        font-family: "ClearSansBold";
+      }
 
-        .teamContainer {
-            float: left;
-            width: 123px;
-            height: 44px;
-            text-align: center;
-            padding-top: 3px;
-
-            img {
-                display: inline;
-                padding: 3px;
-                width: 34px;
-                height: 34px;
-            }
-
-            p {
-                display: inline;
-                position: relative;
-                top: -8px;
-                font-family: "Norwester";
-                font-size: 30px;
-            }
-
-            &.activeTeam {
-                background: $gold;
-            }
-        }
-
-        .divider {
-            float: left;
-            height: 50px;
-            border-left: solid 5px #000;
-        }
-    }
-
-    #secondsUntilNextMove {
-        width: 100%;
+      img {
+        float: left;
+        width: 40px;
         height: 40px;
-        border-bottom: solid 5px #000;
+        margin: 5px 8px 5px 5px;
+        border-radius: 20px;
+      }
 
-        & > p {
-            font-family: "Norwester";
-            font-size: 30px;
-            color: $red;
-            margin: 0;
-            padding-top: 6px;
-        }
+      .textWrapper {
+        float: left;
+        display: table;
+        text-align: left;
+        height: 50px;
+        width: 180px;
+        margin-top: -2px;
+      }
+
+      p {
+        display: table-cell;
+        vertical-align: middle;
+        font-family: "ClearSans";
+        font-size: 14px;
+      }
     }
+  }
+
+  #scoreboard, #numCurrentPlayers {
+    width: 100%;
+    height: 47px;
+    border-bottom: solid 5px #000;
+
+    .teamContainer {
+      float: left;
+      width: 123px;
+      height: 44px;
+      text-align: center;
+      padding-top: 3px;
+
+      img {
+        display: inline;
+        padding: 3px;
+        width: 34px;
+        height: 34px;
+      }
+
+      p {
+        display: inline;
+        position: relative;
+        top: -8px;
+        font-family: "Norwester";
+        font-size: 30px;
+      }
+
+      &.activeTeam {
+        background: $gold;
+      }
+    }
+
+    .divider {
+      float: left;
+      height: 50px;
+      border-left: solid 5px #000;
+    }
+  }
+
+  #secondsUntilNextMove {
+    width: 100%;
+    height: 40px;
+    border-bottom: solid 5px #000;
+
+    & > p {
+      font-family: "Norwester";
+      font-size: 30px;
+      color: $red;
+      margin: 0;
+      padding-top: 6px;
+    }
+  }
 }
 
 /******************/
 /*  INSTRUCTIONS  */
 /******************/
 #howToPlay {
+  width: 520px;
+  margin: 50px auto 10px auto;
+
+  p {
+    font-family: "ClearSans";
+    text-align: justify;
     width: 520px;
-    margin: 50px auto 10px auto;
+  }
 
-    p {
-        font-family: "ClearSans";
-        text-align: justify;
-        width: 520px;
-    }
+  .bold {
+    font-family: "ClearSansBold";;
+  }
 
-    .bold {
-        font-family: "ClearSansBold";;
-    }
+  #blue {
+    font-family: "ClearSansBold";
+    color: darken($blue, 20%);
+  }
 
-    #blue {
-        font-family: "ClearSansBold";
-        color: darken($blue, 20%);
-    }
+  #green {
+    font-family: "ClearSansBold";
+    color: darken($green, 10%);
+  }
 
-    #green {
-        font-family: "ClearSansBold";
-        color: darken($green, 10%);
-    }
+  #orange {
+    font-family: "ClearSansBold";
+    color: darken($orange, 10%);
+  }
 
-    #orange {
-        font-family: "ClearSansBold";
-        color: darken($orange, 10%);
-    }
-
-    #gold {
-        font-family: "ClearSansBold";
-        color: darken($gold, 25%);
-    }
+  #gold {
+    font-family: "ClearSansBold";
+    color: darken($gold, 25%);
+  }
 }
 
 /************/
 /*  FOOTER  */
 /************/
 #firebaseBadge {
-    position: fixed;
-    left: 10px;
-    bottom: 10px;
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
 }
 
 #footer {
-    text-align: center;
-    margin-bottom: 20px;
+  text-align: center;
+  margin-bottom: 20px;
 
-    #gitHubStarButton {
-        margin-right: 10px;
-    }
+  #gitHubStarButton {
+    margin-right: 10px;
+  }
 
-    #gitHubFollowButton {
-        margin-right: 10px;
-    }
+  #gitHubFollowButton {
+    margin-right: 10px;
+  }
 }
