@@ -24,7 +24,7 @@ var updateTimer, getEmptyGrid, resetCurrentGame;
 var wins;
 var currentGame;
 var numSecondsUntilNextMove;
-var suggestions = getEmptyGrid(0);
+var suggestions;
 
 // Make sure the Firebase secret was provided
 if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_SECRET === "undefined") {
@@ -45,6 +45,9 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, func
   // Get the time offset between this process and the Firebase server and start the move timer
   rootRef.child(".info/serverTimeOffset").once("value", function(snapshot) {
     SERVER_TIME_OFFSET = snapshot.val();
+
+    // Reset the suggestions
+    suggestions = getEmptyGrid(0);
 
     // Reset the current game
     resetCurrentGame();
