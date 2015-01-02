@@ -1,21 +1,39 @@
 {
   "name": "tic-tac-tic-tac-toe",
   "description": "Multiplayer tic-tac-toe, with a twist",
-  "author": "Jacob Wenger",
-  "version": "1.0.0",
-  "license": "MIT",
-  "main": "js/server.js",
-  "private": true,
+  "version": "2.0.0",
+  "author": "Jacob Wenger <jacob@firebase.com> (https://jwn.gr/)",
+  "homepage": "https://github.com/jwngr/tic-tac-tic-tac-toe/",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jacobawenger/tic-tac-tic-tac-toe.git"
+    "url": "https://github.com/jwngr/tic-tac-tic-tac-toe.git"
   },
   "bugs": {
-    "url": "https://github.com/jacobawenger/tic-tac-tic-tac-toe/issues"
+    "url": "https://github.com/jwngr/tic-tac-tic-tac-toe/issues"
   },
-  "homepage": "https://github.com/jacobawenger/tic-tac-tic-tac-toe",
-  "dependencies": {
-    "firebase": "~1.0.17"
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ],
+  "keywords": [
+    "game",
+    "puzzle",
+    "firebase",
+    "realtime",
+    "tic-tac-toe",
+    "multiplayer"
+  ],
+  "main": "index.html",
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "^3.8.10",
+    "gulp-autoprefixer": "^2.0.0",
+    "gulp-ext-replace": "^0.1.0",
+    "gulp-jshint": "^1.9.0",
+    "gulp-sass": "^1.2.4",
+    "gulp-uglify": "^1.0.2",
+    "jshint-stylish": "^1.0.0"
   },
-  "devDependencies": {}
+  "private": true
 }
