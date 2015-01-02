@@ -143,9 +143,12 @@ gulp.task("fonts", function() {
 
 /* Re-runs tasks every time files changes */
 gulp.task("watch", function() {
-  gulp.watch([paths.js.src.client], ["scripts-client"]);
-  gulp.watch([paths.js.src.server], ["scripts-server"]);
-  gulp.watch([paths.css.src], ["styles"]);
+  gulp.watch(paths.html.src, ["html"]);
+  gulp.watch(paths.js.src.client, ["scripts-client"]);
+  gulp.watch(paths.js.src.server, ["scripts-server"]);
+  gulp.watch(paths.css.src, ["styles"]);
+  gulp.watch(paths.images.src, ["images"]);
+  gulp.watch(paths.fonts.src, ["fonts"]);
 });
 
 /* Runs the "scripts" and "styles" tasks by default */
