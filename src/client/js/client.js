@@ -215,6 +215,10 @@
               rowIndex: rowIndex,
               columnIndex: columnIndex,
               previousSuggestion: $scope.authData.currentSuggestion ? $scope.authData.currentSuggestion : false
+            }, function(error) {
+              if (error) {
+                console.log("Error setting suggestion:", error);
+              }
             });
 
             // Save the logged-in users's current suggestion

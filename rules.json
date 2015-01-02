@@ -10,7 +10,7 @@
       ".read": true,
 
       "$event": {
-        ".validate": "newData.child('uid').val() == auth.uid && newData.child('type').val() == 'suggestion' && newData.hasChildren(['imageUrl', 'text', 'type'])",
+        ".validate": "newData.hasChildren(['imageUrl', 'text', 'type'])",
         "imageUrl": {
           ".validate": "newData.isString()"
         },
@@ -18,7 +18,10 @@
           ".validate": "newData.isString()"
         },
         "type": {
-          ".validate": "newData.isString() && (newData.val() === 'newGame' || newData.val() === 'suggestions' || newData.val() === 'move' || newData.val() === 'gameOver')"
+          ".validate": "newData.isString() && (newData.val() === 'newGame' || newData.val() === 'suggestion' || newData.val() === 'move' || newData.val() === 'gameOver')"
+        },
+        "$other": {
+          ".validate": "true"
         }
       }
     },
@@ -66,7 +69,7 @@
           ".validate": "newData.isNumber()"
         },
         "previousSuggestion": {
-          ".validate": "newData.isBoolean()"
+          ".validate": "newData.hasChildren(['gridIndex', 'rowIndex', 'columnIndex']) || newData.val() === false"
         },
         "$other": {
           ".validate": "false"

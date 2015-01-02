@@ -26,14 +26,14 @@ var currentGame;
 var numSecondsUntilNextMove;
 var suggestions;
 
-// Make sure the Firebase secret was provided
+// Make sure the Firebase token was provided
 if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_TOKEN === "undefined") {
-  console.log("Usage: node server.js <FIREBASE_SECRET>");
+  console.log("Usage: node server.js <FIREBASE_TOKEN>");
   process.exit(1);
 }
 
 // Autheticate to the Firebase
-rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
+rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, function(error) {
   // Exit if the auth token was invalid
   if (error) {
     console.log(error.code + " Error: Invalid auth token for " + rootRef.toString());
