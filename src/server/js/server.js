@@ -3,7 +3,9 @@
 /*************/
 /*  MODULES  */
 /*************/
+/* jshint -W079 */
 var Firebase = require("firebase");
+/* jshint +W079 */
 
 /********************/
 /*  INITIALIZATION  */
@@ -11,30 +13,38 @@ var Firebase = require("firebase");
 // Get a reference to the Firebase
 var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
 
-// TODO: get these off global scope?
-var serverTimeOffset;
+// Constants
+var SERVER_TIME_OFFSET;
+var NUM_EVENTS_TO_STORE = 200;
+
+// HACK: pre-define these functions to avoid used-before-defined JSHint warnings
+var updateTimer, getEmptyGrid, resetCurrentGame;
+
+// Globals
+var wins;
+var currentGame;
 var numSecondsUntilNextMove;
 var suggestions = getEmptyGrid(0);
-var currentGame;
-var wins;
 
-// Make sure we passed in the Firebase secret as a command line argument
+// Make sure the Firebase secret was provided
 if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_SECRET === "undefined") {
-  console.log("Usage: node server.js <firebase_auth_token>");
+  console.log("Usage: node server.js <FIREBASE_SECRET>");
   process.exit(1);
 }
 
 // Autheticate to the Firebase
-rootRef.auth(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
+rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
   // Exit if the auth token was invalid
   if (error) {
     console.log(error.code + " Error: Invalid auth token for " + rootRef.toString());
     process.exit(1);
+  } else {
+    console.log("Successfully authenticated to the tic-tac-tic-tac-toe Firebase.");
   }
 
-  // Get the time offset between this client and the Firebase server and set the local timer
-  rootRef.child(".info/serverTimeOffset").once("value", function(dataSnapshot) {
-    serverTimeOffset = dataSnapshot.val();
+  // Get the time offset between this process and the Firebase server and start the move timer
+  rootRef.child(".info/serverTimeOffset").once("value", function(snapshot) {
+    SERVER_TIME_OFFSET = snapshot.val();
 
     // Reset the current game
     resetCurrentGame();
@@ -43,10 +53,6 @@ rootRef.auth(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
     setInterval(updateTimer, 1000);
   });
 
-
-  /*****************/
-  /*  SUGGESTIONS  */
-  /*****************/
   // Increment the correct cell in the suggestions grid when a new suggestion is added
   rootRef.child("suggestions").on("child_added", function(childSnapshot) {
     var suggestion = childSnapshot.val();
@@ -64,11 +70,18 @@ rootRef.auth(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
   });
 
-  /**********/
-  /*  WINS  */
-  /**********/
-  rootRef.child("wins").once("value", function(dataSnapshot) {
-    wins = dataSnapshot.val();
+  // Get the existing win counts
+  rootRef.child("wins").once("value", function(snapshot) {
+    wins = snapshot.val();
+  });
+
+  // Only store the last NUM_EVENTS_TO_STORE events
+  rootRef.child("events").limitToLast(NUM_EVENTS_TO_STORE).on("child_removed", function(snapshot) {
+    snapshot.ref().remove(function(error) {
+      if (error) {
+        console.log("Error removing old event:", error.message);
+      }
+    });
   });
 });
 
@@ -77,7 +90,7 @@ rootRef.auth(process.argv[2] || process.env.FIREBASE_SECRET, function(error) {
 /*  HELPER FUNCTIONS  */
 /**********************/
 /* Returns a random grid cell in which the next move can be made */
-function getRandomValidMove() {
+var getRandomValidMove = function() {
   // Get the valid grids for next move as an array
   var validGridsForNextMove = currentGame.validGridsForNextMove.split(",");
 
@@ -99,10 +112,10 @@ function getRandomValidMove() {
     rowIndex: rowIndex,
     columnIndex: columnIndex
   };
-}
+};
 
 /* Returns the location of the most suggested cell or a random valid cell if there aer no suggestions */
-function getMostSuggestedCell() {
+var getMostSuggestedCell = function() {
   // Create a variable to hold the most suggested cell
   var maxSuggestion = {
     numTimesSuggested: 0
@@ -137,10 +150,10 @@ function getMostSuggestedCell() {
     rowIndex: maxSuggestion.rowIndex,
     columnIndex: maxSuggestion.columnIndex
   };
-}
+};
 
 /* Returns a comma-separated string of each grid in which the next move can validly be made */
-function getValidGridsForNextMove(rowIndex, columnIndex) {
+var getValidGridsForNextMove = function(rowIndex, columnIndex) {
   // If that grid is already won, add each un-won grid to the valid grids for next move list
   var validGridsForNextMove;
   if (currentGame.uberGrid[rowIndex][columnIndex]) {
@@ -165,10 +178,10 @@ function getValidGridsForNextMove(rowIndex, columnIndex) {
 
   // Return the valid grids for the next move as a string
   return validGridsForNextMove.toString();
-}
+};
 
 /* Returns the winner of the inputted grid or "" if no one has won the grid */
-function getGridWinner(grid) {
+var getGridWinner = function(grid) {
   // Set the grid as not won
   var gridWinner = "";
 
@@ -227,14 +240,14 @@ function getGridWinner(grid) {
 
   // Return the winner of the grid or "" if no one has won the grid
   return gridWinner;
-}
+};
 
 
 /***********************/
 /*  UPDATE GAME STATE  */
 /***********************/
 /* Makes a move for the current team by choosing the most popular suggestion */
-function makeMove() {
+var makeMove = function() {
   // Get the cell where the current move will be made
   var currentMoveCell = getMostSuggestedCell();
 
@@ -297,9 +310,6 @@ function makeMove() {
 
     // Update the number of wins in Firebase
     rootRef.child("wins/" + uberGridWinner).set(wins[uberGridWinner]);
-
-    // Append the current game to the games history
-    rootRef.child("history").push(currentGame);     // TODO: only send data that is needed (e.g. no need for timestamp or previous move)
   }
 
   // Otherwise, if there is no winner, set the next move to be made in five seconds
@@ -312,19 +322,19 @@ function makeMove() {
   rootRef.update({
     currentGame: currentGame
   });
-}
+};
 
 
 /***********/
 /*  TIMER  */
 /***********/
 /* Returns the time at which the next move should be made */
-function generateTimeOfNextMove(numSecondsUntilNextMove) {
-  return new Date().getTime() + serverTimeOffset + (numSecondsUntilNextMove * 1000);
-}
+var generateTimeOfNextMove = function(numSecondsUntilNextMove) {
+  return new Date().getTime() + SERVER_TIME_OFFSET + (numSecondsUntilNextMove * 1000);
+};
 
 /* Updates the timer and the game message text */
-function updateTimer() {
+updateTimer = function() {
   // Decrement the number of seconds until the next move
   numSecondsUntilNextMove -= 1;
 
@@ -340,14 +350,14 @@ function updateTimer() {
       resetCurrentGame();
     }
   }
-}
+};
 
 
 /****************/
 /*  GAME SETUP  */
 /****************/
 /* Returns a grid in which every cell is the inputted value */
-function getEmptyGrid(value) {
+getEmptyGrid = function(value) {
   return [
     [ [ value, value, value], [value, value, value], [value, value, value] ],
     [ [ value, value, value], [value, value, value], [value, value, value] ],
@@ -359,10 +369,10 @@ function getEmptyGrid(value) {
     [ [ value, value, value], [value, value, value], [value, value, value] ],
     [ [ value, value, value], [value, value, value], [value, value, value] ]
   ];
-}
+};
 
 /* Initializes a new game, wiping out any existing game */
-function resetCurrentGame() {
+resetCurrentGame = function() {
   // Initialize the current game globally
   currentGame = {
     whoseTurn: (Math.random() > 0.5) ? "github" : "twitter",
@@ -391,4 +401,4 @@ function resetCurrentGame() {
 
   // Reset the timer
   numSecondsUntilNextMove = 7;
-}
+};
