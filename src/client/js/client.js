@@ -35,43 +35,50 @@
     };
   });
 
-  app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSimpleLogin", "$timeout",
-    function($scope, $firebase, $firebaseSimpleLogin, $timeout) {
+  app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseAuth", "$timeout",
+    function($scope, $firebase, $firebaseAuth, $timeout) {
       // Get a reference to the root of the Firebase
       $scope.rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
 
-      // Initialize the Firebase simple login factory
-      $scope.loginObj = $firebaseSimpleLogin($scope.rootRef);
+      // Initialize the Firebase auth factory
+      $scope.authObj = $firebaseAuth($scope.rootRef);
 
 
       /***************/
       /*  STATS HUB  */
       /***************/
-      // TODO: I don't need to use .bind() here; just use return value of $firebase(ref)
-      // Create a 3-way binding to the play by play events, limiting how many we keep at a time
-      $firebase($scope.rootRef.child("events").limit(100)).$bind($scope, "events").then();
+      // Get an array of the play by play events, limiting how many we keep at a time
+      $scope.events = $firebase($scope.rootRef.child("events").limitToLast(100)).$asArray();
 
-      // Create a 3-way binding with the scoreboard wins
-      $firebase($scope.rootRef.child("wins")).$bind($scope, "wins");
+      // Get the scoreboard wins object
+      $scope.wins = $firebase($scope.rootRef.child("wins")).$asObject();
 
       // Keep track of the number of GitHub users
       $scope.numGitHubUsers = 0;
-      var gitHubUsersRef = $firebase($scope.rootRef.child("loggedInUsers/github"));
-      gitHubUsersRef.$on("child_added", function() {
-        $scope.numGitHubUsers += 1;
+      var gitHubUsersRef = $scope.rootRef.child("loggedInUsers/github");
+      gitHubUsersRef.on("child_added", function() {
+        $timeout(function() {
+          $scope.numGitHubUsers += 1;
+        });
       });
-      gitHubUsersRef.$on("child_removed", function() {
-        $scope.numGitHubUsers -= 1;
+      gitHubUsersRef.on("child_removed", function() {
+        $timeout(function() {
+          $scope.numGitHubUsers -= 1;
+        });
       });
 
       // Keep track of the number of Twitter users
       $scope.numTwitterUsers = 0;
-      var twitterUsersRef = $firebase($scope.rootRef.child("loggedInUsers/twitter"));
-      twitterUsersRef.$on("child_added", function() {
-        $scope.numTwitterUsers += 1;
+      var twitterUsersRef = $scope.rootRef.child("loggedInUsers/twitter");
+      twitterUsersRef.on("child_added", function() {
+        $timeout(function() {
+          $scope.numTwitterUsers += 1;
+        });
       });
-      twitterUsersRef.$on("child_removed", function() {
-        $scope.numTwitterUsers -= 1;
+      twitterUsersRef.on("child_removed", function() {
+        $timeout(function() {
+          $scope.numTwitterUsers -= 1;
+        });
       });
 
 
@@ -94,19 +101,24 @@
       };
 
       /* Sets up the current game (making a new one if needed) */
-      $scope.setupGame = function(loggedInUser) {
+      $scope.setupGame = function(authData) {
         // Store the logged-in user locally
-        $scope.loggedInUser = loggedInUser;
+        $scope.authData = authData;
 
         // Keep track of when the logged-in user in connected or disconnected from Firebase
         $scope.rootRef.child(".info/connected").on("value", function(dataSnapshot) {
-          if (dataSnapshot.val() === true) {
+          if (dataSnapshot.val()) {
             // Remove the user from the logged-in users list when they get disconnected
-            var loggedInUsersRef = $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid);
+            var loggedInUsersRef = $scope.rootRef.child("loggedInUsers/" + $scope.authData.provider + "/" + $scope.authData.uid);
             loggedInUsersRef.onDisconnect().remove();
 
             // Add the user to the logged-in users list when they get connected
-            $firebase(loggedInUsersRef).$set(true);
+            var username = $scope.authData.username;
+            loggedInUsersRef.set({
+              imageUrl: ($scope.authData.provider === "github") ? $scope.authData.avatar_url : $scope.authData.profile_image_url_https,
+              userUrl: ($scope.authData.provider === "github") ?  "https://github.com/" + username : "https://twitter.com/" + username,
+              username: username
+            });
           }
         });
 
@@ -138,8 +150,8 @@
         $scope.suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
 
         // Reset the logged-in user's current suggestion
-        if ($scope.loggedInUser) {
-          $scope.loggedInUser.currentSuggestion = null;
+        if ($scope.authData) {
+          $scope.authData.currentSuggestion = null;
         }
       });
 
@@ -148,22 +160,26 @@
       /*  LOGIN / LOGOUT  */
       /********************/
       // Get the time offset between this client and the Firebase server and set the local timer
-      $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset").then(function() {
-        // Create a 3-way binding with the current game
-        $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function() {
+      $scope.rootRef.child(".info/serverTimeOffset").once("value", function(snapshot) {
+        $scope.serverTimeOffset = snapshot.val();
+
+        // Create a three-way binding with the current game
+        $scope.currentGame = $firebase($scope.rootRef.child("currentGame")).$asObject();
+        $scope.currentGame.$loaded(function() {
           // If the current user is logged in, setup the current game
-          $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
-            if (loggedInUser) {
-              $scope.setupGame(loggedInUser);
-            }
-          });
+          var authData = $scope.authObj.$getAuth();
+          console.log("authData:", authData);
+          if (authData) {
+            $scope.setupGame(authData);
+          }
         });
       });
 
       /* Logs the current user in and joins the current game */
       $scope.joinGame = function(provider) {
-        $scope.loginObj.$login(provider).then(function(loggedInUser) {
-          $scope.setupGame(loggedInUser);
+        $scope.authObj.$authWithOAuthPopup(provider).then(function(authData) {
+          console.log("authData 2:", authData);
+          $scope.setupGame(authData);
         }, function(error) {
            console.error("Login failed: ", error);
         });
@@ -172,12 +188,12 @@
       /* Logs the logged-in user out */
       $scope.logoutUser = function() {
         // Remove the user from their team's logged-in users node
-        $scope.rootRef.child("loggedInUsers/" + $scope.loggedInUser.provider + "/" + $scope.loggedInUser.uid).remove(function() {
+        $scope.rootRef.child("loggedInUsers/" + $scope.authData.provider + "/" + $scope.authData.uid).remove(function() {
           // Log the user out of Firebase
           $scope.loginObj.$logout();
 
           // Clear the local logged-in user, the game message, and the move suggestions
-          $scope.loggedInUser = null;
+          $scope.authData = null;
           $scope.gameMessage = null;
 
           // Turn off any Firebase event listeners
@@ -192,34 +208,19 @@
       /* Adds a suggestion from the logged-in users for his team's move */
       $scope.suggestMove = function(gridIndex, rowIndex, columnIndex) {
         // Make sure a game has started, the logged-in user's team is up, and the move is valid
-        if ($scope.currentGame && $scope.loggedInUser && $scope.loggedInUser.provider === $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
+        if ($scope.currentGame && $scope.authData && $scope.authData.provider === $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
           // Ignore the suggesetion if it hasn't changed
-          if (!$scope.loggedInUser.currentSuggestion || $scope.loggedInUser.currentSuggestion.gridIndex !== gridIndex || $scope.loggedInUser.currentSuggestion.rowIndex !== rowIndex || $scope.loggedInUser.currentSuggestion.columnIndex !== columnIndex) {
-            // Get the username, image URL, and user URL of the logged-in user
-            var username = $scope.loggedInUser.username;
-            var imageUrl = ($scope.loggedInUser.provider === "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
-            var userUrl = ($scope.loggedInUser.provider === "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
-
-            // Create an event for the logged-in user's suggestion
-            $scope.events.$add({
-              imageUrl: imageUrl,
-              userUrl: userUrl,
-              text: " chose [" + gridIndex + "," + rowIndex + "," + columnIndex + "]",
-              username: username,
-              uid: $scope.loggedInUser.uid,
-              type: "suggestion"
-            });
-
-            // Add the suggestion to the move suggestions
-            $scope.rootRef.child("suggestions/" + $scope.loggedInUser.uid).set({
+          if (!$scope.authData.currentSuggestion || $scope.authData.currentSuggestion.gridIndex !== gridIndex || $scope.authData.currentSuggestion.rowIndex !== rowIndex || $scope.authData.currentSuggestion.columnIndex !== columnIndex) {
+            // Add the suggestion to the /suggestions/ node
+            $scope.rootRef.child("suggestions/" + $scope.authData.uid).set({
               gridIndex: gridIndex,
               rowIndex: rowIndex,
               columnIndex: columnIndex,
-              previousSuggestion: $scope.loggedInUser.currentSuggestion ? $scope.loggedInUser.currentSuggestion : false
+              previousSuggestion: $scope.authData.currentSuggestion ? $scope.authData.currentSuggestion : false
             });
 
             // Save the logged-in users's current suggestion
-            $scope.loggedInUser.currentSuggestion = {
+            $scope.authData.currentSuggestion = {
               gridIndex: gridIndex,
               rowIndex: rowIndex,
               columnIndex: columnIndex
@@ -235,7 +236,7 @@
         if (!currentGame.winner) {
           // Get the team whose turn it is and the logged-in user's team
           var whoseTurnTeam = (currentGame.whoseTurn === "github") ? "GitHub" : "Twitter";
-          var loggedInUsersTeam = ($scope.loggedInUser.provider === "github") ? "GitHub" : "Twitter";
+          var loggedInUsersTeam = ($scope.authData.provider === "github") ? "GitHub" : "Twitter";
 
           // If it is the logged-in user's team's turn, tell them how much time is left to make it
           if (whoseTurnTeam === loggedInUsersTeam) {
@@ -275,7 +276,7 @@
         $scope.updateTimerInterval = setInterval($scope.updateTimer, 1000);
 
         // Set the game message if the user is logged in
-        if ($scope.loggedInUser) {
+        if ($scope.authData) {
           $scope.setGameMessage(currentGame);
         }
       });
@@ -373,8 +374,8 @@
       $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
         if ($scope.currentGame && !$scope.currentGame.winner)
         {
-          if ($scope.loggedInUser && $scope.loggedInUser.provider === $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] === "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) !== -1) {
-            if ($scope.loggedInUser.currentSuggestion && $scope.loggedInUser.currentSuggestion.gridIndex === gridIndex && $scope.loggedInUser.currentSuggestion.rowIndex === rowIndex && $scope.loggedInUser.currentSuggestion.columnIndex === columnIndex) {
+          if ($scope.authData && $scope.authData.provider === $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] === "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) !== -1) {
+            if ($scope.authData.currentSuggestion && $scope.authData.currentSuggestion.gridIndex === gridIndex && $scope.authData.currentSuggestion.rowIndex === rowIndex && $scope.authData.currentSuggestion.columnIndex === columnIndex) {
               return "suggestedMove";
             }
             else {

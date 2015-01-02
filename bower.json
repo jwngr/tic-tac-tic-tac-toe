@@ -21,10 +21,8 @@
   ],
   "main": "index.html",
   "dependencies": {
-    "firebase": "2.0.x",
     "angularfire": "0.9.0"
   },
   "devDependencies": {
-    "jasmine": "~2.1.3"
   }
 }

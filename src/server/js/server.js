@@ -15,7 +15,7 @@ var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
 
 // Constants
 var SERVER_TIME_OFFSET;
-var NUM_EVENTS_TO_STORE = 200;
+var NUM_EVENTS_TO_STORE = 100;
 
 // HACK: pre-define these functions to avoid used-before-defined JSHint warnings
 var updateTimer, getEmptyGrid, resetCurrentGame;
@@ -60,6 +60,20 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, func
   rootRef.child("suggestions").on("child_added", function(childSnapshot) {
     var suggestion = childSnapshot.val();
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+
+    // Create an event for the logged-in user's suggestion
+    rootRef.child("loggedInUsers").child(childSnapshot.key()).once("value", function(userSnapshot) {
+      var user = userSnapshot.val();
+
+      rootRef.child("events").push({
+        imageUrl: user.imageUrl,
+        userUrl: user.userUrl,
+        text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
+        username: user.username,
+        uid: childSnapshot.key(),
+        type: "suggestion"
+      });
+    });
   });
   // Decrement the correct cell in the suggestions grid when a suggestion is removed
   rootRef.child("suggestions").on("child_removed", function(childSnapshot) {

@@ -71,7 +71,7 @@ gulp.task("html", function() {
 });
 
 /* Lints and minifies the JavaScript files */
-gulp.task("scripts", ["scripts-client", "scripts-server"]);
+gulp.task("scripts", ["scripts-client", "scripts-server", "bower-components"]);
 
 /* Lints and minifies the client JavaScript files */
 gulp.task("scripts-client", function() {
@@ -109,6 +109,12 @@ gulp.task("scripts-server", function() {
     .on("error", function(error) {
       throw error;
     });
+});
+
+/* Copies the bower_components/ directory to distrubition directory */
+gulp.task("bower-components", function() {
+  return gulp.src("src/client/bower_components/**/*.*")
+    .pipe(gulp.dest("dist/bower_components"));
 });
 
 /* Converts and minifies the CSS files */
