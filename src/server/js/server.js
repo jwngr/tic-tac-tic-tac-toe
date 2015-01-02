@@ -18,7 +18,7 @@ var SERVER_TIME_OFFSET;
 var NUM_EVENTS_TO_STORE = 100;
 
 // HACK: pre-define these functions to avoid used-before-defined JSHint warnings
-var updateTimer, getEmptyGrid, resetCurrentGame;
+var updateTimer, getEmptyGrid, resetCurrentGame, createSuggestionEvent;
 
 // Globals
 var wins;
@@ -62,21 +62,7 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, func
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
 
     // Create an event for the logged-in user's suggestion
-    var provider = childSnapshot.key().split(":")[0];
-    rootRef.child("loggedInUsers").child(provider).child(childSnapshot.key()).once("value", function(userSnapshot) {
-      var user = userSnapshot.val();
-      console.log(user);
-      if (user) {
-        rootRef.child("events").push({
-          imageUrl: user.imageUrl,
-          userUrl: user.userUrl,
-          text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
-          username: user.username,
-          uid: childSnapshot.key(),
-          type: "suggestion"
-        });
-      }
-    });
+    createSuggestionEvent(childSnapshot.key(), suggestion);
   });
   // Decrement the correct cell in the suggestions grid when a suggestion is removed
   rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
@@ -88,6 +74,9 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_SECRET, func
     var suggestion = childSnapshot.val();
     suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][suggestion.previousSuggestion.columnIndex] -= 1;
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+
+    // Create an event for the logged-in user's suggestion
+    createSuggestionEvent(childSnapshot.key(), suggestion);
   });
 
   // Get the existing win counts
@@ -262,6 +251,24 @@ var getGridWinner = function(grid) {
   return gridWinner;
 };
 
+/* Adds a suggestion event to the /events/ node */
+createSuggestionEvent = function(uid, suggestion) {
+  var provider = uid.split(":")[0];
+  rootRef.child("loggedInUsers").child(provider).child(uid).once("value", function(userSnapshot) {
+    var user = userSnapshot.val();
+    console.log(user);
+    if (user) {
+      rootRef.child("events").push({
+        imageUrl: user.imageUrl,
+        userUrl: user.userUrl,
+        text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
+        username: user.username,
+        uid: uid,
+        type: "suggestion"
+      });
+    }
+  });
+};
 
 /***********************/
 /*  UPDATE GAME STATE  */
