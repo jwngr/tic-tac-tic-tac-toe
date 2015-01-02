@@ -1,3 +1,6 @@
+(function () {
+  "use strict";
+
 var app = angular.module("tic-tac-tic-tac-toe-app", ["firebase"]);
 
 /* Returns a list of items in reverse order */
@@ -18,7 +21,7 @@ app.filter("reverse", function() {
             }
         }
         return out;
-    };
+    }
 
     return function(items) {
         return toArray(items).slice().reverse();
@@ -54,20 +57,20 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         // Keep track of the number of GitHub users
         $scope.numGitHubUsers = 0;
         var gitHubUsersRef = $firebase($scope.rootRef.child("loggedInUsers/github"));
-        gitHubUsersRef.$on("child_added", function(dataSnapshot) {
+        gitHubUsersRef.$on("child_added", function() {
             $scope.numGitHubUsers += 1;
         });
-        gitHubUsersRef.$on("child_removed", function(dataSnapshot) {
+        gitHubUsersRef.$on("child_removed", function() {
             $scope.numGitHubUsers -= 1;
         });
 
         // Keep track of the number of Twitter users
         $scope.numTwitterUsers = 0;
         var twitterUsersRef = $firebase($scope.rootRef.child("loggedInUsers/twitter"));
-        twitterUsersRef.$on("child_added", function(dataSnapshot) {
+        twitterUsersRef.$on("child_added", function() {
             $scope.numTwitterUsers += 1;
         });
-        twitterUsersRef.$on("child_removed", function(dataSnapshot) {
+        twitterUsersRef.$on("child_removed", function() {
             $scope.numTwitterUsers -= 1;
         });
 
@@ -147,7 +150,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         // Get the time offset between this client and the Firebase server and set the local timer
         $firebase($scope.rootRef.child(".info/serverTimeOffset")).$bind($scope, "serverTimeOffset").then(function() {
             // Create a 3-way binding with the current game
-            $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function(unbind) {
+            $firebase($scope.rootRef.child("currentGame")).$bind($scope, "currentGame").then(function() {
                 // If the current user is logged in, setup the current game
                 $scope.loginObj.$getCurrentUser().then(function(loggedInUser) {
                     if (loggedInUser) {
@@ -189,13 +192,13 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /* Adds a suggestion from the logged-in users for his team's move */
         $scope.suggestMove = function(gridIndex, rowIndex, columnIndex) {
             // Make sure a game has started, the logged-in user's team is up, and the move is valid
-            if ($scope.currentGame && $scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
+            if ($scope.currentGame && $scope.loggedInUser && $scope.loggedInUser.provider === $scope.currentGame.whoseTurn && $scope.isMoveValid(gridIndex, rowIndex, columnIndex)) {
                 // Ignore the suggesetion if it hasn't changed
-                if (!$scope.loggedInUser.currentSuggestion || $scope.loggedInUser.currentSuggestion.gridIndex != gridIndex || $scope.loggedInUser.currentSuggestion.rowIndex != rowIndex || $scope.loggedInUser.currentSuggestion.columnIndex != columnIndex) {
+                if (!$scope.loggedInUser.currentSuggestion || $scope.loggedInUser.currentSuggestion.gridIndex !== gridIndex || $scope.loggedInUser.currentSuggestion.rowIndex !== rowIndex || $scope.loggedInUser.currentSuggestion.columnIndex !== columnIndex) {
                     // Get the username, image URL, and user URL of the logged-in user
                     var username = $scope.loggedInUser.username;
-                    var imageUrl = ($scope.loggedInUser.provider == "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
-                    var userUrl = ($scope.loggedInUser.provider == "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
+                    var imageUrl = ($scope.loggedInUser.provider === "github") ? $scope.loggedInUser.avatar_url : $scope.loggedInUser.profile_image_url_https;
+                    var userUrl = ($scope.loggedInUser.provider === "github") ?  "https://github.com/" + username : "https://twitter.com/" + username;
 
                     // Create an event for the logged-in user's suggestion
                     $scope.events.$add({
@@ -231,11 +234,11 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             currentGame = currentGame || $scope.currentGame;
             if (!currentGame.winner) {
                 // Get the team whose turn it is and the logged-in user's team
-                var whoseTurnTeam = (currentGame.whoseTurn == "github") ? "GitHub" : "Twitter";
-                var loggedInUsersTeam = ($scope.loggedInUser.provider == "github") ? "GitHub" : "Twitter";
+                var whoseTurnTeam = (currentGame.whoseTurn === "github") ? "GitHub" : "Twitter";
+                var loggedInUsersTeam = ($scope.loggedInUser.provider === "github") ? "GitHub" : "Twitter";
 
                 // If it is the logged-in user's team's turn, tell them how much time is left to make it
-                if (whoseTurnTeam == loggedInUsersTeam) {
+                if (whoseTurnTeam === loggedInUsersTeam) {
                     $scope.gameMessage = "Suggest a move for Team " + whoseTurnTeam + "!";
                 }
                 // Otherwise, just say that they are waiting for the other team to move
@@ -246,7 +249,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Otherwise, set the message telling who won the previous game and how long it is until the next game
             else {
-                var winningTeam = (currentGame.winner == "github") ? "GitHub" : "Twitter";
+                var winningTeam = (currentGame.winner === "github") ? "GitHub" : "Twitter";
                 $scope.gameMessage = "Team " + winningTeam + " wins! A new game will start soon.";
             }
         };
@@ -260,7 +263,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             var currentGame = dataSnapshot.val();
 
             // Clear the current update timer interval
-            window.clearInterval($scope.updateTimerInterval);
+            clearInterval($scope.updateTimerInterval);
 
             // Update the number of seconds until the next move
             $scope.numSecondsUntilNextMove = Math.ceil((currentGame.timeOfNextMove - $scope.serverTimeOffset - new Date().getTime()) / 1000);
@@ -269,7 +272,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
             }
 
             // Update the timer every second
-            $scope.updateTimerInterval = window.setInterval($scope.updateTimer, 1000);
+            $scope.updateTimerInterval = setInterval($scope.updateTimer, 1000);
 
             // Set the game message if the user is logged in
             if ($scope.loggedInUser) {
@@ -286,10 +289,10 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                 }
 
                 // If the timer has hit zero, reset it and make a move for the current team
-                if ($scope.numSecondsUntilNextMove == 0)
+                if ($scope.numSecondsUntilNextMove === 0)
                 {
                     // Clear the current update timer interval
-                    window.clearInterval($scope.updateTimerInterval);
+                    clearInterval($scope.updateTimerInterval);
                 }
             });
         };
@@ -300,7 +303,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         /**********************/
         /* Returns true if the cell represented by the inputs is a cell in which the next move can be validly made */
         $scope.isMoveValid = function(gridIndex, rowIndex, columnIndex) {
-            return ($scope.currentGame.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1);
+            return ($scope.currentGame.grids[gridIndex][rowIndex][columnIndex] === "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) !== -1);
         };
 
         // TODO: simplify this for clients and just get it from $scope.currentGame.uberGrid
@@ -311,7 +314,7 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             // Check for a win across the rows
             for (var i = 0; i < 3; ++i) {
-                if (grid[i][0] != "" && grid[i][0] == grid[i][1] && grid[i][1] == grid[i][2])
+                if (grid[i][0] !== "" && grid[i][0] === grid[i][1] && grid[i][1] === grid[i][2])
                 {
                     gridWinner = grid[i][0];
                 }
@@ -319,8 +322,8 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
             if (!gridWinner) {
                 // Check for a win down the columns
-                for (var i = 0; i < 3; ++i) {
-                    if (grid[0][i] != "" && grid[0][i] == grid[1][i] && grid[1][i] == grid[2][i])
+                for (i = 0; i < 3; ++i) {
+                    if (grid[0][i] !== "" && grid[0][i] === grid[1][i] && grid[1][i] === grid[2][i])
                     {
                         gridWinner = grid[0][i];
                     }
@@ -328,10 +331,10 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
                 if (!gridWinner) {
                     // Check for a win on the diagnoals
-                    if (grid[0][0] != "" && grid[0][0] == grid[1][1] && grid [1][1] == grid [2][2]) {
+                    if (grid[0][0] !== "" && grid[0][0] === grid[1][1] && grid [1][1] === grid [2][2]) {
                         gridWinner = grid[0][0];
                     }
-                    else if (grid[0][2] != "" && grid[0][2] == grid[1][1] && grid [1][1] == grid [2][0]) {
+                    else if (grid[0][2] !== "" && grid[0][2] === grid[1][1] && grid [1][1] === grid [2][0]) {
                         gridWinner = grid[0][2];
                     }
 
@@ -341,16 +344,16 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
                         var numOCells = 0;
                         for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
                             for (var columnIndex = 0; columnIndex < 3; ++ columnIndex) {
-                                if (grid[rowIndex][columnIndex] == "github") {
+                                if (grid[rowIndex][columnIndex] === "github") {
                                     numXCells += 1;
                                 }
-                                else if (grid[rowIndex][columnIndex] == "twitter") {
+                                else if (grid[rowIndex][columnIndex] === "twitter") {
                                     numOCells += 1;
                                 }
                             }
                         }
 
-                        if (numXCells + numOCells == 9) {
+                        if (numXCells + numOCells === 9) {
                             if (numXCells > numOCells) {
                                 gridWinner = "github";
                             }
@@ -370,15 +373,15 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
         $scope.getCellClass = function(gridIndex, rowIndex, columnIndex) {
             if ($scope.currentGame && !$scope.currentGame.winner)
             {
-                if ($scope.loggedInUser && $scope.loggedInUser.provider == $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] == "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) != -1) {
-                    if ($scope.loggedInUser.currentSuggestion && $scope.loggedInUser.currentSuggestion.gridIndex == gridIndex && $scope.loggedInUser.currentSuggestion.rowIndex == rowIndex && $scope.loggedInUser.currentSuggestion.columnIndex == columnIndex) {
+                if ($scope.loggedInUser && $scope.loggedInUser.provider === $scope.currentGame.whoseTurn && $scope.currentGame.grids[gridIndex][rowIndex][columnIndex] === "" && $scope.currentGame.validGridsForNextMove.indexOf(gridIndex) !== -1) {
+                    if ($scope.loggedInUser.currentSuggestion && $scope.loggedInUser.currentSuggestion.gridIndex === gridIndex && $scope.loggedInUser.currentSuggestion.rowIndex === rowIndex && $scope.loggedInUser.currentSuggestion.columnIndex === columnIndex) {
                         return "suggestedMove";
                     }
                     else {
                         return "validForMove";
                     }
                 }
-                else if ($scope.currentGame.previousMove && $scope.currentGame.previousMove.gridIndex == gridIndex && $scope.currentGame.previousMove.rowIndex == rowIndex && $scope.currentGame.previousMove.columnIndex == columnIndex) {
+                else if ($scope.currentGame.previousMove && $scope.currentGame.previousMove.gridIndex === gridIndex && $scope.currentGame.previousMove.rowIndex === rowIndex && $scope.currentGame.previousMove.columnIndex === columnIndex) {
                     return "previousMove";
                 }
             }
@@ -386,16 +389,17 @@ app.controller("TicTacTicTacToeController", ["$scope", "$firebase", "$firebaseSi
 
         /* Returns the CSS class the current team container should have */
         $scope.getTeamContainerClass = function(team) {
-            if ($scope.currentGame && !$scope.currentGame.winner && $scope.currentGame.whoseTurn == team) {
+            if ($scope.currentGame && !$scope.currentGame.winner && $scope.currentGame.whoseTurn === team) {
                 return "activeTeam";
             }
         };
 
         /* Returns the CSS class the current grid winner should have */
         $scope.getGridWinnerClass = function(gridIndex) {
-            if ($scope.currentGame && $scope.currentGame.winner && $scope.currentGame.winner == $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3]){
+            if ($scope.currentGame && $scope.currentGame.winner && $scope.currentGame.winner === $scope.currentGame.uberGrid[Math.floor(gridIndex / 3)][gridIndex % 3]){
                 return "winningTeam";
             }
         };
     }
 ]);
+}());

@@ -35,7 +35,10 @@ var paths = {
   },
 
   js: {
-    src: "src/client/js/client.js",
+    src: {
+      client: "src/client/js/*.js",
+      server: "src/server/js/*.js"
+    },
     dest: {
       dir: "dist/js",
       minified: "client.min.js"
@@ -68,8 +71,11 @@ gulp.task("html", function() {
 });
 
 /* Lints and minifies the JavaScript files */
-gulp.task("scripts", function() {
-  return gulp.src(paths.js.src)
+gulp.task("scripts", ["scripts-client", "scripts-server"]);
+
+/* Lints and minifies the client JavaScript files */
+gulp.task("scripts-client", function() {
+  return gulp.src(paths.js.src.client)
     // Lint
     .pipe(jshint())
     .pipe(jshint.reporter("jshint-stylish"))
@@ -91,6 +97,18 @@ gulp.task("scripts", function() {
 
     // Write minified version
     .pipe(gulp.dest(paths.js.dest.dir));
+});
+
+/* Lints the server JavaScript files */
+gulp.task("scripts-server", function() {
+  return gulp.src(paths.js.src.server)
+    // Lint
+    .pipe(jshint())
+    .pipe(jshint.reporter("jshint-stylish"))
+    .pipe(jshint.reporter("fail"))
+    .on("error", function(error) {
+      throw error;
+    });
 });
 
 /* Converts and minifies the CSS files */
@@ -125,7 +143,8 @@ gulp.task("fonts", function() {
 
 /* Re-runs tasks every time files changes */
 gulp.task("watch", function() {
-  gulp.watch([paths.js.src], ["scripts"]);
+  gulp.watch([paths.js.src.client], ["scripts-client"]);
+  gulp.watch([paths.js.src.server], ["scripts-server"]);
   gulp.watch([paths.css.src], ["styles"]);
 });
 
