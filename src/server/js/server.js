@@ -80,7 +80,7 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
   });
 
   // Get the existing win counts
-  rootRef.child("wins").once("value", function(snapshot) {
+  rootRef.child("wins").on("value", function(snapshot) {
     wins = snapshot.val();
   });
 
