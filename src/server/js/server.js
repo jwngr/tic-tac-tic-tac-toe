@@ -425,9 +425,7 @@ resetCurrentGame = function() {
   };
 
   // Update Firebase with the current game
-  rootRef.set({
-    currentGame: currentGame
-  });
+  rootRef.child("currentGame").set(currentGame);
 
   // Create a new game event
   rootRef.child("events").push({
