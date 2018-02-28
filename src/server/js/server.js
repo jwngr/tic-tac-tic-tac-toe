@@ -54,6 +54,8 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
 
     // Update the timer every second
     setInterval(updateTimer, 1000);
+  }, function(error) {
+    console.log('ERROR:', error);
   });
 
   // Increment the correct cell in the suggestions grid when a new suggestion is added
