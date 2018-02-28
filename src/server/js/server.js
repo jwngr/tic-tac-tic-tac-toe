@@ -68,11 +68,15 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
 
     // Create an event for the logged-in user's suggestion
     createSuggestionEvent(childSnapshot.key(), suggestion);
+  }, function(error) {
+    console.log('child_added error:', error);
   });
   // Decrement the correct cell in the suggestions grid when a suggestion is removed
   rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
     var suggestion = childSnapshot.val();
     suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
+  }, function(error) {
+    console.log('child_removed error:', error);
   });
   // Update the correct cells in the suggestions grid when a suggestion is changed
   rootRef.child("suggestions/").on("child_changed", function(childSnapshot) {
@@ -82,6 +86,8 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
 
     // Create an event for the logged-in user's suggestion
     createSuggestionEvent(childSnapshot.key(), suggestion);
+  }, function(error) {
+    console.log('child_changed error:', error);
   });
 
   // Get the existing win counts
@@ -419,7 +425,7 @@ resetCurrentGame = function() {
   };
 
   // Update Firebase with the current game
-  rootRef.update({
+  rootRef.set({
     currentGame: currentGame
   });
 
