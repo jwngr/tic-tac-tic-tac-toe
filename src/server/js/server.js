@@ -26,6 +26,8 @@ var currentGame;
 var numSecondsUntilNextMove;
 var suggestions;
 
+console.log('TEST');
+
 // Make sure the Firebase token was provided
 if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_TOKEN === "undefined") {
   console.log("Usage: node server.js <FIREBASE_TOKEN>");
@@ -44,6 +46,7 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
 
   // Get the time offset between this process and the Firebase server and start the move timer
   rootRef.child(".info/serverTimeOffset").once("value", function(snapshot) {
+    console.log('SUCCESS');
     SERVER_TIME_OFFSET = snapshot.val();
 
     // Reset the suggestions
