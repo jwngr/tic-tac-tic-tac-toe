@@ -58,7 +58,7 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
     // Update the timer every second
     setInterval(updateTimer, 1000);
   }, function(error) {
-    console.log('ERROR:', error);
+    console.log('Error reading .info/serverTimeOffset:', error);
   });
 
   // Increment the correct cell in the suggestions grid when a new suggestion is added
@@ -346,7 +346,11 @@ var makeMove = function() {
     }
 
     // Update the number of wins in Firebase
-    rootRef.child("wins/" + uberGridWinner).set(wins[uberGridWinner]);
+    rootRef.child("wins/" + uberGridWinner).set(wins[uberGridWinner], function(error) {
+      if (error) {
+        console.log('Failed to update wins:', error);
+      }
+    });
   }
 
   // Otherwise, if there is no winner, set the next move to be made in five seconds
@@ -356,8 +360,10 @@ var makeMove = function() {
   }
 
   // Update the current game in Firebase
-  rootRef.update({
-    currentGame: currentGame
+  rootRef.child('currentGame').set(currentGame, function(error) {
+    if (error) {
+      console.log('Failed to update current game 2:', error);
+    }
   });
 };
 
@@ -425,8 +431,10 @@ resetCurrentGame = function() {
   };
 
   // Update Firebase with the current game
-  rootRef.set({
-    currentGame: currentGame
+  rootRef.child('currentGame').set(currentGame, function(error) {
+    if (error) {
+      console.log('Failed to reset current game:', error);
+    }
   });
 
   // Create a new game event
