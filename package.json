@@ -26,7 +26,7 @@
   ],
   "main": "index.html",
   "dependencies": {
-    "firebase": "2.0.x"
+    "firebase": "2.x.x"
   },
   "devDependencies": {
     "gulp": "^3.8.10",
