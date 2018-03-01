@@ -1,17 +1,17 @@
-"use strict";
+'use strict';
 
 /*************/
 /*  MODULES  */
 /*************/
 /* jshint -W079 */
-var Firebase = require("firebase");
+var Firebase = require('firebase');
 /* jshint +W079 */
 
 /********************/
 /*  INITIALIZATION  */
 /********************/
 // Get a reference to the Firebase
-var rootRef = new Firebase("https://tic-tac-tic-tac-toe.firebaseio.com/");
+var rootRef = new Firebase('https://tic-tac-tic-tac-toe.firebaseio.com/');
 
 // Constants
 var SERVER_TIME_OFFSET;
@@ -29,8 +29,8 @@ var suggestions;
 console.log('TEST');
 
 // Make sure the Firebase token was provided
-if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_TOKEN === "undefined") {
-  console.log("Usage: node server.js <FIREBASE_TOKEN>");
+if (typeof process.argv[2] === 'undefined' && typeof process.env.FIREBASE_TOKEN === 'undefined') {
+  console.log('Usage: node server.js <FIREBASE_TOKEN>');
   process.exit(1);
 }
 
@@ -38,73 +38,93 @@ if (typeof process.argv[2] === "undefined" && typeof process.env.FIREBASE_TOKEN 
 rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, function(error) {
   // Exit if the auth token was invalid
   if (error) {
-    console.log(error.code + " Error: Invalid auth token for " + rootRef.toString());
+    console.log(error.code + ' Error: Invalid auth token for ' + rootRef.toString());
     process.exit(1);
   } else {
-    console.log("Successfully authenticated to the tic-tac-tic-tac-toe Firebase.");
+    console.log('Successfully authenticated to the tic-tac-tic-tac-toe Firebase.');
   }
 
   // Get the time offset between this process and the Firebase server and start the move timer
-  rootRef.child(".info/serverTimeOffset").once("value", function(snapshot) {
-    console.log('SUCCESS');
-    SERVER_TIME_OFFSET = snapshot.val();
+  rootRef.child('.info/serverTimeOffset').once(
+    'value',
+    function(snapshot) {
+      console.log('SUCCESS');
+      SERVER_TIME_OFFSET = snapshot.val();
 
-    // Reset the suggestions
-    suggestions = getEmptyGrid(0);
+      // Reset the suggestions
+      suggestions = getEmptyGrid(0);
 
-    // Reset the current game
-    resetCurrentGame();
+      // Reset the current game
+      resetCurrentGame();
 
-    // Update the timer every second
-    setInterval(updateTimer, 1000);
-  }, function(error) {
-    console.log('Error reading .info/serverTimeOffset:', error);
-  });
+      // Update the timer every second
+      setInterval(updateTimer, 1000);
+    },
+    function(error) {
+      console.log('Error reading .info/serverTimeOffset:', error);
+    }
+  );
 
   // Increment the correct cell in the suggestions grid when a new suggestion is added
-  rootRef.child("suggestions").on("child_added", function(childSnapshot) {
-    var suggestion = childSnapshot.val();
-    suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+  rootRef.child('suggestions').on(
+    'child_added',
+    function(childSnapshot) {
+      var suggestion = childSnapshot.val();
+      suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
 
-    // Create an event for the logged-in user's suggestion
-    createSuggestionEvent(childSnapshot.key(), suggestion);
-  }, function(error) {
-    console.log('child_added error:', error);
-  });
+      // Create an event for the logged-in user's suggestion
+      createSuggestionEvent(childSnapshot.key(), suggestion);
+    },
+    function(error) {
+      console.log('child_added error:', error);
+    }
+  );
   // Decrement the correct cell in the suggestions grid when a suggestion is removed
-  rootRef.child("suggestions").on("child_removed", function(childSnapshot) {
-    var suggestion = childSnapshot.val();
-    suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
-  }, function(error) {
-    console.log('child_removed error:', error);
-  });
+  rootRef.child('suggestions').on(
+    'child_removed',
+    function(childSnapshot) {
+      var suggestion = childSnapshot.val();
+      suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
+    },
+    function(error) {
+      console.log('child_removed error:', error);
+    }
+  );
   // Update the correct cells in the suggestions grid when a suggestion is changed
-  rootRef.child("suggestions/").on("child_changed", function(childSnapshot) {
-    var suggestion = childSnapshot.val();
-    suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][suggestion.previousSuggestion.columnIndex] -= 1;
-    suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
+  rootRef.child('suggestions/').on(
+    'child_changed',
+    function(childSnapshot) {
+      var suggestion = childSnapshot.val();
+      suggestions[suggestion.previousSuggestion.gridIndex][suggestion.previousSuggestion.rowIndex][
+        suggestion.previousSuggestion.columnIndex
+      ] -= 1;
+      suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] += 1;
 
-    // Create an event for the logged-in user's suggestion
-    createSuggestionEvent(childSnapshot.key(), suggestion);
-  }, function(error) {
-    console.log('child_changed error:', error);
-  });
+      // Create an event for the logged-in user's suggestion
+      createSuggestionEvent(childSnapshot.key(), suggestion);
+    },
+    function(error) {
+      console.log('child_changed error:', error);
+    }
+  );
 
   // Get the existing win counts
-  rootRef.child("wins").on("value", function(snapshot) {
+  rootRef.child('wins').on('value', function(snapshot) {
     wins = snapshot.val();
   });
 
   // Only store the last NUM_EVENTS_TO_STORE events
-  rootRef.child("events").limitToLast(NUM_EVENTS_TO_STORE).on("child_removed", function(snapshot) {
-    snapshot.ref().remove(function(error) {
-      if (error) {
-        console.log("Error removing old event:", error.message);
-      }
+  rootRef
+    .child('events')
+    .limitToLast(NUM_EVENTS_TO_STORE)
+    .on('child_removed', function(snapshot) {
+      snapshot.ref().remove(function(error) {
+        if (error) {
+          console.log('Error removing old event:', error.message);
+        }
+      });
     });
-  });
 });
-
 
 /**********************/
 /*  HELPER FUNCTIONS  */
@@ -112,16 +132,18 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
 /* Returns a random grid cell in which the next move can be made */
 var getRandomValidMove = function() {
   // Get the valid grids for next move as an array
-  var validGridsForNextMove = currentGame.validGridsForNextMove.split(",");
+  var validGridsForNextMove = currentGame.validGridsForNextMove.split(',');
 
   // Randomly choose one of the valid grids to make a move in
   var numValidGridsForNextMove = validGridsForNextMove.length;
-  var gridIndex = parseInt(validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)]);
+  var gridIndex = parseInt(
+    validGridsForNextMove[Math.floor(Math.random() * numValidGridsForNextMove)]
+  );
 
   // Keep looping until we find cell coordinates for an open cell
   var rowIndex = Math.floor(Math.random() * 3);
   var columnIndex = Math.floor(Math.random() * 3);
-  while (currentGame.grids[gridIndex][rowIndex][columnIndex] !== "") {
+  while (currentGame.grids[gridIndex][rowIndex][columnIndex] !== '') {
     rowIndex = Math.floor(Math.random() * 3);
     columnIndex = Math.floor(Math.random() * 3);
   }
@@ -130,7 +152,7 @@ var getRandomValidMove = function() {
   return {
     gridIndex: gridIndex,
     rowIndex: rowIndex,
-    columnIndex: columnIndex
+    columnIndex: columnIndex,
   };
 };
 
@@ -138,21 +160,24 @@ var getRandomValidMove = function() {
 var getMostSuggestedCell = function() {
   // Create a variable to hold the most suggested cell
   var maxSuggestion = {
-    numTimesSuggested: 0
+    numTimesSuggested: 0,
   };
 
   // For each grid in which the current move can be made, check if it has the most suggested cell
-  currentGame.validGridsForNextMove.split(",").forEach(function(i) {
+  currentGame.validGridsForNextMove.split(',').forEach(function(i) {
     for (var j = 0; j < 3; ++j) {
       for (var k = 0; k < 3; ++k) {
         var numTimesSuggested = suggestions[i][j][k];
-        if (numTimesSuggested > maxSuggestion.numTimesSuggested || (numTimesSuggested === maxSuggestion.numTimesSuggested && Math.random() > 0.5)) {
-          console.assert(numTimesSuggested === 0 || currentGame.grids[i][j][k] === ""); // TODO: make this go to debugger if not correct
+        if (
+          numTimesSuggested > maxSuggestion.numTimesSuggested ||
+          (numTimesSuggested === maxSuggestion.numTimesSuggested && Math.random() > 0.5)
+        ) {
+          console.assert(numTimesSuggested === 0 || currentGame.grids[i][j][k] === ''); // TODO: make this go to debugger if not correct
           maxSuggestion = {
             gridIndex: i,
             rowIndex: j,
             columnIndex: k,
-            numTimesSuggested: numTimesSuggested
+            numTimesSuggested: numTimesSuggested,
           };
         }
       }
@@ -168,7 +193,7 @@ var getMostSuggestedCell = function() {
   return {
     gridIndex: maxSuggestion.gridIndex,
     rowIndex: maxSuggestion.rowIndex,
-    columnIndex: maxSuggestion.columnIndex
+    columnIndex: maxSuggestion.columnIndex,
   };
 };
 
@@ -180,19 +205,14 @@ var getValidGridsForNextMove = function(rowIndex, columnIndex) {
     validGridsForNextMove = [];
     for (var i = 0; i < 3; ++i) {
       for (var j = 0; j < 3; ++j) {
-        if (currentGame.uberGrid[i][j] === "") {
-          validGridsForNextMove.push((3 * i) + j);
+        if (currentGame.uberGrid[i][j] === '') {
+          validGridsForNextMove.push(3 * i + j);
         }
       }
     }
-  }
-  else {
+  } else {
     // Otherwise, just add that single grid
-    var grids = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8]
-    ];
+    var grids = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
     validGridsForNextMove = [grids[rowIndex][columnIndex]];
   }
 
@@ -203,12 +223,15 @@ var getValidGridsForNextMove = function(rowIndex, columnIndex) {
 /* Returns the winner of the inputted grid or "" if no one has won the grid */
 var getGridWinner = function(grid) {
   // Set the grid as not won
-  var gridWinner = "";
+  var gridWinner = '';
 
   // Check for a win across the rows
   for (var rowIndex = 0; rowIndex < 3; ++rowIndex) {
-    if (grid[rowIndex][0] !== "" && grid[rowIndex][0] === grid[rowIndex][1] && grid[rowIndex][1] === grid[rowIndex][2])
-    {
+    if (
+      grid[rowIndex][0] !== '' &&
+      grid[rowIndex][0] === grid[rowIndex][1] &&
+      grid[rowIndex][1] === grid[rowIndex][2]
+    ) {
       gridWinner = grid[rowIndex][0];
     }
   }
@@ -216,18 +239,20 @@ var getGridWinner = function(grid) {
   if (!gridWinner) {
     // Check for a win down the columns
     for (var columnIndex = 0; columnIndex < 3; ++columnIndex) {
-      if (grid[0][columnIndex] !== "" && grid[0][columnIndex] === grid[1][columnIndex] && grid[1][columnIndex] === grid[2][columnIndex])
-      {
+      if (
+        grid[0][columnIndex] !== '' &&
+        grid[0][columnIndex] === grid[1][columnIndex] &&
+        grid[1][columnIndex] === grid[2][columnIndex]
+      ) {
         gridWinner = grid[0][columnIndex];
       }
     }
 
     if (!gridWinner) {
       // Check for a win on the diagnoals
-      if (grid[0][0] !== "" && grid[0][0] === grid[1][1] && grid [1][1] === grid [2][2]) {
+      if (grid[0][0] !== '' && grid[0][0] === grid[1][1] && grid[1][1] === grid[2][2]) {
         gridWinner = grid[0][0];
-      }
-      else if (grid[0][2] !== "" && grid[0][2] === grid[1][1] && grid [1][1] === grid [2][0]) {
+      } else if (grid[0][2] !== '' && grid[0][2] === grid[1][1] && grid[1][1] === grid[2][0]) {
         gridWinner = grid[0][2];
       }
 
@@ -236,11 +261,10 @@ var getGridWinner = function(grid) {
         var numXCells = 0;
         var numOCells = 0;
         for (rowIndex = 0; rowIndex < 3; ++rowIndex) {
-          for (columnIndex = 0; columnIndex < 3; ++ columnIndex) {
-            if (grid[rowIndex][columnIndex] === "github") {
+          for (columnIndex = 0; columnIndex < 3; ++columnIndex) {
+            if (grid[rowIndex][columnIndex] === 'github') {
               numXCells += 1;
-            }
-            else if (grid[rowIndex][columnIndex] === "twitter") {
+            } else if (grid[rowIndex][columnIndex] === 'twitter') {
               numOCells += 1;
             }
           }
@@ -248,10 +272,9 @@ var getGridWinner = function(grid) {
 
         if (numXCells + numOCells === 9) {
           if (numXCells > numOCells) {
-            gridWinner = "github";
-          }
-          else {
-            gridWinner = "twitter";
+            gridWinner = 'github';
+          } else {
+            gridWinner = 'twitter';
           }
         }
       }
@@ -264,20 +287,31 @@ var getGridWinner = function(grid) {
 
 /* Adds a suggestion event to the /events/ node */
 createSuggestionEvent = function(uid, suggestion) {
-  var provider = uid.split(":")[0];
-  rootRef.child("loggedInUsers").child(provider).child(uid).once("value", function(userSnapshot) {
-    var user = userSnapshot.val();
-    if (user) {
-      rootRef.child("events").push({
-        imageUrl: user.imageUrl,
-        userUrl: user.userUrl,
-        text: " chose [" + suggestion.gridIndex + "," + suggestion.rowIndex + "," + suggestion.columnIndex + "]",
-        username: user.username,
-        uid: uid,
-        type: "suggestion"
-      });
-    }
-  });
+  var provider = uid.split(':')[0];
+  rootRef
+    .child('loggedInUsers')
+    .child(provider)
+    .child(uid)
+    .once('value', function(userSnapshot) {
+      var user = userSnapshot.val();
+      if (user) {
+        rootRef.child('events').push({
+          imageUrl: user.imageUrl,
+          userUrl: user.userUrl,
+          text:
+            ' chose [' +
+            suggestion.gridIndex +
+            ',' +
+            suggestion.rowIndex +
+            ',' +
+            suggestion.columnIndex +
+            ']',
+          username: user.username,
+          uid: uid,
+          type: 'suggestion',
+        });
+      }
+    });
 };
 
 /***********************/
@@ -289,45 +323,61 @@ var makeMove = function() {
   var currentMoveCell = getMostSuggestedCell();
 
   // Update the inputted cell's value
-  currentGame.grids[currentMoveCell.gridIndex][currentMoveCell.rowIndex][currentMoveCell.columnIndex] = currentGame.whoseTurn;
+  currentGame.grids[currentMoveCell.gridIndex][currentMoveCell.rowIndex][
+    currentMoveCell.columnIndex
+  ] =
+    currentGame.whoseTurn;
 
   // Get the image URL and team name of the team who is making the move
-  var imageUrl = (currentGame.whoseTurn === "github") ? "./images/gitHubLogo.png" : "./images/twitterLogo.png";
-  var team = (currentGame.whoseTurn === "github") ? "GitHub" : "Twitter";
+  var imageUrl =
+    currentGame.whoseTurn === 'github' ? './images/gitHubLogo.png' : './images/twitterLogo.png';
+  var team = currentGame.whoseTurn === 'github' ? 'GitHub' : 'Twitter';
 
   // Create an event for the move
-  rootRef.child("events").push({
+  rootRef.child('events').push({
     imageUrl: imageUrl,
     teamName: team,
-    text: " played [" + currentMoveCell.gridIndex + "," + currentMoveCell.rowIndex + "," + currentMoveCell.columnIndex + "]",
-    type: "move"
+    text:
+      ' played [' +
+      currentMoveCell.gridIndex +
+      ',' +
+      currentMoveCell.rowIndex +
+      ',' +
+      currentMoveCell.columnIndex +
+      ']',
+    type: 'move',
   });
 
   // Update whose turn it is
-  currentGame.whoseTurn = (currentGame.whoseTurn === "github") ? "twitter" : "github";
+  currentGame.whoseTurn = currentGame.whoseTurn === 'github' ? 'twitter' : 'github';
 
   // Store this move as the previous move
   currentGame.previousMove = currentMoveCell;
 
   // Update the uber grid if the current grid was won
-  currentGame.uberGrid[Math.floor(currentMoveCell.gridIndex / 3)][currentMoveCell.gridIndex % 3] = getGridWinner(currentGame.grids[currentMoveCell.gridIndex]);
+  currentGame.uberGrid[Math.floor(currentMoveCell.gridIndex / 3)][
+    currentMoveCell.gridIndex % 3
+  ] = getGridWinner(currentGame.grids[currentMoveCell.gridIndex]);
 
   // Get the grids in which the next move can be made
-  currentGame.validGridsForNextMove = getValidGridsForNextMove(currentMoveCell.rowIndex, currentMoveCell.columnIndex);
+  currentGame.validGridsForNextMove = getValidGridsForNextMove(
+    currentMoveCell.rowIndex,
+    currentMoveCell.columnIndex
+  );
 
   // Clear the move suggestions
-  rootRef.child("suggestions").remove();
+  rootRef.child('suggestions').remove();
 
   // Check if the uber grid was won and the game should end
   var uberGridWinner = getGridWinner(currentGame.uberGrid);
   if (uberGridWinner) {
     // Add a game over event to the play by play ticker
-    team = (uberGridWinner === "github") ? "GitHub" : "Twitter";
-    rootRef.child("events").push({
-      imageUrl: "./images/ticTacTicTacToeLogo.png",
+    team = uberGridWinner === 'github' ? 'GitHub' : 'Twitter';
+    rootRef.child('events').push({
+      imageUrl: './images/ticTacTicTacToeLogo.png',
       teamName: team,
-      text: " won!",
-      type: "gameOver"
+      text: ' won!',
+      type: 'gameOver',
     });
 
     // Specify who won the game
@@ -338,23 +388,20 @@ var makeMove = function() {
     numSecondsUntilNextMove = 10;
 
     // Increment the number of teams wins
-    if (uberGridWinner === "github") {
+    if (uberGridWinner === 'github') {
       wins.github += 1;
-    }
-    else {
+    } else {
       wins.twitter += 1;
     }
 
     // Update the number of wins in Firebase
-    rootRef.child("wins/" + uberGridWinner).set(wins[uberGridWinner], function(error) {
+    rootRef.child('wins/' + uberGridWinner).set(wins[uberGridWinner], function(error) {
       if (error) {
         console.log('Failed to update wins:', error);
       }
     });
-  }
-
-  // Otherwise, if there is no winner, set the next move to be made in five seconds
-  else {
+  } else {
+    // Otherwise, if there is no winner, set the next move to be made in five seconds
     currentGame.timeOfNextMove += 7000;
     numSecondsUntilNextMove = 7;
   }
@@ -367,13 +414,12 @@ var makeMove = function() {
   });
 };
 
-
 /***********/
 /*  TIMER  */
 /***********/
 /* Returns the time at which the next move should be made */
 var generateTimeOfNextMove = function(numSecondsUntilNextMove) {
-  return new Date().getTime() + SERVER_TIME_OFFSET + (numSecondsUntilNextMove * 1000);
+  return new Date().getTime() + SERVER_TIME_OFFSET + numSecondsUntilNextMove * 1000;
 };
 
 /* Updates the timer and the game message text */
@@ -382,19 +428,16 @@ updateTimer = function() {
   numSecondsUntilNextMove -= 1;
 
   // If the timer has hit zero, reset it and make a move for the current team
-  if (numSecondsUntilNextMove === 0)
-  {
+  if (numSecondsUntilNextMove === 0) {
     // If there is not a winner, reset the timer in Firebase and make a move for the current team
     if (!currentGame.winner) {
       makeMove();
-    }
-    // Otherwise, reset the game since it has been won
-    else {
+    } else {
+      // Otherwise, reset the game since it has been won
       resetCurrentGame();
     }
   }
 };
-
 
 /****************/
 /*  GAME SETUP  */
@@ -402,15 +445,15 @@ updateTimer = function() {
 /* Returns a grid in which every cell is the inputted value */
 getEmptyGrid = function(value) {
   return [
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ],
-    [ [ value, value, value], [value, value, value], [value, value, value] ]
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
+    [[value, value, value], [value, value, value], [value, value, value]],
   ];
 };
 
@@ -418,16 +461,12 @@ getEmptyGrid = function(value) {
 resetCurrentGame = function() {
   // Initialize the current game globally
   currentGame = {
-    whoseTurn: (Math.random() > 0.5) ? "github" : "twitter",
-    winner: "",
-    grids: getEmptyGrid(""),
-    uberGrid: [
-      [ "", "", "" ],
-      [ "", "", "" ],
-      [ "", "", "" ]
-    ],
-    validGridsForNextMove: "0,1,2,3,4,5,6,7,8",
-    timeOfNextMove: generateTimeOfNextMove(7)
+    whoseTurn: Math.random() > 0.5 ? 'github' : 'twitter',
+    winner: '',
+    grids: getEmptyGrid(''),
+    uberGrid: [['', '', ''], ['', '', ''], ['', '', '']],
+    validGridsForNextMove: '0,1,2,3,4,5,6,7,8',
+    timeOfNextMove: generateTimeOfNextMove(7),
   };
 
   // Update Firebase with the current game
@@ -438,10 +477,10 @@ resetCurrentGame = function() {
   });
 
   // Create a new game event
-  rootRef.child("events").push({
-    imageUrl: "./images/ticTacTicTacToeLogo.png",
-    text: "A new game has started!",
-    type: "newGame"
+  rootRef.child('events').push({
+    imageUrl: './images/ticTacTicTacToeLogo.png',
+    text: 'A new game has started!',
+    type: 'newGame',
   });
 
   // Reset the timer
