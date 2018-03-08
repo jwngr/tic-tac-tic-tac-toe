@@ -10,8 +10,13 @@ var Firebase = require('firebase');
 /********************/
 /*  INITIALIZATION  */
 /********************/
-// Get a reference to the Firebase
+// Get references to Firebase
 var rootRef = new Firebase('https://tic-tac-tic-tac-toe.firebaseio.com/');
+var winsRef = rootRef.child('wins');
+var eventsRef = rootRef.child('events');
+var currentGameRef = rootRef.child('currentGame');
+var suggestionsRef = rootRef.child('suggestions');
+var loggedInUsersRef = rootRef.child('loggedInUsers')
 
 // Constants
 var SERVER_TIME_OFFSET;
@@ -26,29 +31,28 @@ var currentGame;
 var numSecondsUntilNextMove;
 var suggestions;
 
-console.log('TEST');
+console.log('[INFO] Starting tic-tac-tic-tac-toe server...');
 
 // Make sure the Firebase token was provided
 if (typeof process.argv[2] === 'undefined' && typeof process.env.FIREBASE_TOKEN === 'undefined') {
-  console.log('Usage: node server.js <FIREBASE_TOKEN>');
+  console.log('[ERROR] Usage: node server.js <FIREBASE_TOKEN>');
   process.exit(1);
 }
 
 // Autheticate to the Firebase
 rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, function(error) {
   // Exit if the auth token was invalid
-  if (error) {
-    console.log(error.code + ' Error: Invalid auth token for ' + rootRef.toString());
+  if (error !== null) {
+    console.log('[ERROR] Invalid auth token:', error.code);
     process.exit(1);
   } else {
-    console.log('Successfully authenticated to the tic-tac-tic-tac-toe Firebase.');
+    console.log('[INFO] Successfully authenticated to Firebase');
   }
 
   // Get the time offset between this process and the Firebase server and start the move timer
   rootRef.child('.info/serverTimeOffset').once(
     'value',
     function(snapshot) {
-      console.log('SUCCESS');
       SERVER_TIME_OFFSET = snapshot.val();
 
       // Reset the suggestions
@@ -61,12 +65,12 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
       setInterval(updateTimer, 1000);
     },
     function(error) {
-      console.log('Error reading .info/serverTimeOffset:', error);
+      console.log('[ERROR] Failed to establish listener on ".info/serverTimeOffset":', error);
     }
   );
 
   // Increment the correct cell in the suggestions grid when a new suggestion is added
-  rootRef.child('suggestions').on(
+  suggestionsRef.on(
     'child_added',
     function(childSnapshot) {
       var suggestion = childSnapshot.val();
@@ -76,22 +80,22 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
       createSuggestionEvent(childSnapshot.key(), suggestion);
     },
     function(error) {
-      console.log('child_added error:', error);
+      console.log('[ERROR] Failed to establish "child_added" listener on "suggestions":', error);
     }
   );
   // Decrement the correct cell in the suggestions grid when a suggestion is removed
-  rootRef.child('suggestions').on(
+  suggestionsRef.on(
     'child_removed',
     function(childSnapshot) {
       var suggestion = childSnapshot.val();
       suggestions[suggestion.gridIndex][suggestion.rowIndex][suggestion.columnIndex] -= 1;
     },
     function(error) {
-      console.log('child_removed error:', error);
+      console.log('[ERROR] Failed to establish "child_removed" listener on "suggestions":', error);
     }
   );
   // Update the correct cells in the suggestions grid when a suggestion is changed
-  rootRef.child('suggestions/').on(
+  suggestionsRef.on(
     'child_changed',
     function(childSnapshot) {
       var suggestion = childSnapshot.val();
@@ -104,23 +108,24 @@ rootRef.authWithCustomToken(process.argv[2] || process.env.FIREBASE_TOKEN, funct
       createSuggestionEvent(childSnapshot.key(), suggestion);
     },
     function(error) {
-      console.log('child_changed error:', error);
+      console.log('[ERROR] Failed to establish "child_changed" listener on "suggestions":', error);
     }
   );
 
   // Get the existing win counts
-  rootRef.child('wins').on('value', function(snapshot) {
+  winsRef.on('value', function(snapshot) {
     wins = snapshot.val();
+  }, function(error) {
+    console.log('[ERROR] Failed to establish "value" listener on "wins":', error);
   });
 
   // Only store the last NUM_EVENTS_TO_STORE events
-  rootRef
-    .child('events')
+  eventsRef
     .limitToLast(NUM_EVENTS_TO_STORE)
     .on('child_removed', function(snapshot) {
       snapshot.ref().remove(function(error) {
-        if (error) {
-          console.log('Error removing old event:', error.message);
+        if (error !== null) {
+          console.log('[ERROR] Failed to remove old event:', error);
         }
       });
     });
@@ -288,14 +293,13 @@ var getGridWinner = function(grid) {
 /* Adds a suggestion event to the /events/ node */
 createSuggestionEvent = function(uid, suggestion) {
   var provider = uid.split(':')[0];
-  rootRef
-    .child('loggedInUsers')
+  loggedInUsersRef
     .child(provider)
     .child(uid)
     .once('value', function(userSnapshot) {
       var user = userSnapshot.val();
       if (user) {
-        rootRef.child('events').push({
+        eventsRef.push({
           imageUrl: user.imageUrl,
           userUrl: user.userUrl,
           text:
@@ -309,6 +313,11 @@ createSuggestionEvent = function(uid, suggestion) {
           username: user.username,
           uid: uid,
           type: 'suggestion',
+        },
+        function(error) {
+          if (error !== null) {
+            console.log('[ERROR] Failed to add suggestion event:', error);
+          }
         });
       }
     });
@@ -334,7 +343,7 @@ var makeMove = function() {
   var team = currentGame.whoseTurn === 'github' ? 'GitHub' : 'Twitter';
 
   // Create an event for the move
-  rootRef.child('events').push({
+  eventsRef.push({
     imageUrl: imageUrl,
     teamName: team,
     text:
@@ -346,6 +355,11 @@ var makeMove = function() {
       currentMoveCell.columnIndex +
       ']',
     type: 'move',
+  },
+  function(error) {
+    if (error !== null) {
+      console.log('[ERROR] Failed to add move event:', error);
+    }
   });
 
   // Update whose turn it is
@@ -366,18 +380,23 @@ var makeMove = function() {
   );
 
   // Clear the move suggestions
-  rootRef.child('suggestions').remove();
+  suggestionsRef.remove();
 
   // Check if the uber grid was won and the game should end
   var uberGridWinner = getGridWinner(currentGame.uberGrid);
   if (uberGridWinner) {
     // Add a game over event to the play by play ticker
     team = uberGridWinner === 'github' ? 'GitHub' : 'Twitter';
-    rootRef.child('events').push({
+    eventsRef.push({
       imageUrl: './images/ticTacTicTacToeLogo.png',
       teamName: team,
       text: ' won!',
       type: 'gameOver',
+    },
+    function(error) {
+      if (error !== null) {
+        console.log('[ERROR] Failed to add game over event:', error);
+      }
     });
 
     // Specify who won the game
@@ -394,10 +413,12 @@ var makeMove = function() {
       wins.twitter += 1;
     }
 
+    console.log('[INFO] Game won by', uberGridWinner);
+
     // Update the number of wins in Firebase
-    rootRef.child('wins/' + uberGridWinner).set(wins[uberGridWinner], function(error) {
-      if (error) {
-        console.log('Failed to update wins:', error);
+    winsRef.child(uberGridWinner).set(wins[uberGridWinner], function(error) {
+      if (error !== null) {
+        console.log('[ERROR] Failed to update wins:', error);
       }
     });
   } else {
@@ -407,9 +428,9 @@ var makeMove = function() {
   }
 
   // Update the current game in Firebase
-  rootRef.child('currentGame').set(currentGame, function(error) {
-    if (error) {
-      console.log('Failed to update current game 2:', error);
+  currentGameRef.set(currentGame, function(error) {
+    if (error !== null) {
+      console.log('[ERROR] Failed to set current game:', error);
     }
   });
 };
@@ -470,17 +491,21 @@ resetCurrentGame = function() {
   };
 
   // Update Firebase with the current game
-  rootRef.child('currentGame').set(currentGame, function(error) {
-    if (error) {
-      console.log('Failed to reset current game:', error);
+  currentGameRef.set(currentGame, function(error) {
+    if (error !== null) {
+      console.log('[ERROR] Failed to reset current game:', error);
     }
   });
 
   // Create a new game event
-  rootRef.child('events').push({
+  eventsRef.push({
     imageUrl: './images/ticTacTicTacToeLogo.png',
     text: 'A new game has started!',
     type: 'newGame',
+  }, function(error) {
+    if (error !== null) {
+      console.log('[ERROR] Failed to add new game event:', error);
+    }
   });
 
   // Reset the timer

@@ -1,28 +1,9 @@
 {
   "name": "tic-tac-tic-tac-toe",
   "description": "Multiplayer tic-tac-toe, with a twist",
-  "version": "2.0.0",
-  "authors": [
-    "Jacob Wenger <jacob@firebase.com>"
-  ],
-  "homepage": "https://github.com/jwngr/tic-tac-tic-tac-toe/",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jwngr/tic-tac-tic-tac-toe.git"
-  },
-  "license": "MIT",
-  "keywords": [
-    "game",
-    "puzzle",
-    "firebase",
-    "realtime",
-    "tic-tac-toe",
-    "multiplayer"
-  ],
+  "version": "3.0.0",
   "main": "index.html",
   "dependencies": {
     "angularfire": "0.9.0"
-  },
-  "devDependencies": {
   }
 }
