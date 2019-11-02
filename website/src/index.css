@@ -1,0 +1,10 @@
+body {
+  /* Background image from: http://subtlepatterns.com/transparent-square-tiles/ */
+  background-image: url('./images/background.png');
+}
+
+h2 {
+  font-family: 'Norwester';
+  margin-bottom: 20px;
+  text-align: center;
+}

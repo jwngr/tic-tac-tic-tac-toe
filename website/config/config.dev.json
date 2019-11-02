@@ -1,0 +1,9 @@
+{
+  "firebase": {
+    "apiKey": "AIzaSyAxawjhTH5SayFuZqe-NMe9n8OWJJ76w2s",
+    "appId": "1:522638519444:web:e3abe852ae21886c1ad881",
+    "authDomain": "tic-tac-tic-tac-toe.firebaseapp.com",
+    "databaseURL": "https://tic-tac-tic-tac-toe.firebaseio.com",
+    "projectId": "tic-tac-tic-tac-toe"
+  }
+}
