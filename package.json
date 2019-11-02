@@ -1,19 +1,13 @@
 {
   "name": "tic-tac-tic-tac-toe",
+  "description": "Multiplayer tic-tac-toe, with a twist",
   "version": "4.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "server/server.js",
+  "engines": {
+    "node": "8.x"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jwngr/tic-tac-tic-tac-toe.git"
+  "dependencies": {
+    "firebase": "2.x.x"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jwngr/tic-tac-tic-tac-toe/issues"
-  },
-  "homepage": "https://github.com/jwngr/tic-tac-tic-tac-toe#readme"
+  "private": true
 }
