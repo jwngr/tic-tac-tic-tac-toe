@@ -1,6 +1,6 @@
 {
-  "name": "ttttt",
-  "version": "0.1.0",
+  "name": "tic-tac-tic-tac-toe",
+  "version": "4.0.0",
   "private": true,
   "dependencies": {
     "firebase": "^7.2.2",
