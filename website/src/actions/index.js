@@ -70,7 +70,9 @@ export function listenForAuthStateChanges() {
                       : 'https://twitter.com/' + username,
                 })
                 .catch((error) => {
-                  dispatch(setErrorMessage(`Failed to add logged-in user to Firebase: ${error.message}`))
+                  dispatch(
+                    setErrorMessage(`Failed to add logged-in user to Firebase: ${error.message}`)
+                  );
                 });
             }
           });
@@ -102,7 +104,7 @@ export function subscribeToCurrentGame() {
             if (currentGame.timeOfNextMove !== previousTimeOfNextMove) {
               // Clear the existing interval;
               clearInterval(updateTimerInterval);
-              
+
               // Determine how much time until the next move.
               const numMillisecondsUntilNextMove =
                 currentGame.timeOfNextMove - serverTimeOffset - Date.now();
@@ -125,11 +127,9 @@ export function subscribeToCurrentGame() {
                     numSecondsUntilNextMove -= 1;
                   }
 
-                  
                   // If the timer has hit zero, reset it and make a move for the current team
                   if (numSecondsUntilNextMove === 0) {
                     numSecondsUntilNextMove = 7;
-
                   }
 
                   // Update the timer.

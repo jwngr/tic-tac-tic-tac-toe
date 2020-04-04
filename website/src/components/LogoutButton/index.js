@@ -36,4 +36,4 @@ class LogoutButton extends React.Component {
   }
 }
 
-export default LogoutButton
+export default LogoutButton;
