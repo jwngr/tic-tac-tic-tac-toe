@@ -8,13 +8,18 @@
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-redux": "^7.1.1",
-    "react-scripts": "3.2.0",
+    "react-scripts": "3.4.1",
     "redux": "^4.0.4",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
-    "styled-components": "^4.4.1",
+    "styled-components": "^5.0.1",
     "typeface-clear-sans": "0.0.44",
     "typeface-norwester": "0.0.55"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "lint-staged": {
     "{src,schedules}/**/*.{js,css}": [
@@ -44,13 +49,8 @@
     ]
   },
   "devDependencies": {
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.2",
-    "prettier": "^1.18.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.1",
+    "prettier": "^2.0.2"
   }
 }
